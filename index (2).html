@@ -1,0 +1,624 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>坚朗秦泰报餐系统 - 智能限时报餐</title>
+    <!-- SheetJS 导出 Excel -->
+    <script src="https://cdn.sheetjs.com/xlsx-0.20.2/package/dist/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: system-ui, 'Segoe UI', 'PingFang SC', Roboto, 'Helvetica Neue', sans-serif;
+        }
+
+        body {
+            background: #f0f4f0;
+            padding: 24px 20px;
+        }
+
+        .container {
+            max-width: 1400px;
+            margin: 0 auto;
+        }
+
+        .header {
+            background: linear-gradient(135deg, #1f543d, #2b6e4e);
+            border-radius: 36px;
+            padding: 28px 24px;
+            margin-bottom: 32px;
+            box-shadow: 0 15px 25px -12px rgba(0,0,0,0.2);
+            text-align: center;
+        }
+
+        .header h1 {
+            color: white;
+            font-size: 2rem;
+            letter-spacing: 2px;
+            font-weight: 700;
+        }
+
+        .header p {
+            color: #d0f0de;
+            margin-top: 8px;
+            font-size: 0.9rem;
+        }
+
+        .dashboard {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 28px;
+        }
+
+        .form-card {
+            flex: 1.2;
+            min-width: 340px;
+            background: white;
+            border-radius: 32px;
+            padding: 28px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .records-card {
+            flex: 2.2;
+            min-width: 520px;
+            background: white;
+            border-radius: 32px;
+            padding: 28px;
+            box-shadow: 0 10px 24px rgba(0, 0, 0, 0.05);
+        }
+
+        .section-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: #1e2a23;
+            border-left: 5px solid #2b6e4e;
+            padding-left: 16px;
+            margin-bottom: 22px;
+        }
+
+        .input-group {
+            margin-bottom: 24px;
+        }
+
+        .input-group label {
+            font-weight: 600;
+            color: #2c4e3a;
+            margin-bottom: 8px;
+            display: block;
+        }
+
+        textarea, input {
+            width: 100%;
+            padding: 14px 18px;
+            font-size: 1rem;
+            border: 2px solid #e0e8e0;
+            border-radius: 28px;
+            transition: 0.2s;
+            background: #fff;
+            resize: vertical;
+        }
+
+        textarea:focus, input:focus {
+            outline: none;
+            border-color: #2b6e4e;
+            box-shadow: 0 0 0 3px rgba(43, 110, 78, 0.2);
+        }
+
+        .rule-box {
+            background: #fefce8;
+            border-left: 4px solid #eab308;
+            padding: 14px 18px;
+            border-radius: 24px;
+            margin-bottom: 20px;
+            font-size: 0.85rem;
+            color: #7a5c00;
+        }
+
+        .rule-box strong {
+            display: block;
+            margin-bottom: 6px;
+            font-size: 0.9rem;
+        }
+
+        .format-hint {
+            background: #eef6ef;
+            padding: 12px 16px;
+            border-radius: 20px;
+            font-size: 0.85rem;
+            margin-bottom: 24px;
+            border: 1px solid #cfe3d4;
+        }
+
+        .btn {
+            border: none;
+            border-radius: 40px;
+            padding: 12px 24px;
+            font-weight: 600;
+            font-size: 1rem;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .btn-primary {
+            background: #2b6e4e;
+            color: white;
+            width: 100%;
+            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
+        }
+
+        .btn-primary:hover {
+            background: #1e523a;
+            transform: translateY(-2px);
+        }
+
+        .toolbar {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 12px;
+            margin-bottom: 20px;
+        }
+
+        .export-btn {
+            background: #1f543d;
+            color: white;
+            border: none;
+            padding: 10px 22px;
+            border-radius: 40px;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            font-weight: 500;
+        }
+
+        .export-btn:hover {
+            background: #13422f;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            border-radius: 20px;
+            border: 1px solid #e2ede4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.85rem;
+        }
+
+        th {
+            background: #e4f3ea;
+            padding: 14px 12px;
+            text-align: left;
+            font-weight: 700;
+            color: #1f4d34;
+        }
+
+        td {
+            padding: 12px 12px;
+            border-bottom: 1px solid #e2ede4;
+        }
+
+        tr:hover {
+            background: #f9fef9;
+        }
+
+        .badge {
+            display: inline-block;
+            border-radius: 40px;
+            padding: 4px 12px;
+            font-size: 0.7rem;
+            font-weight: 600;
+        }
+
+        .badge-lunch { background: #fef3c7; color: #b45309; }
+        .badge-dinner { background: #e0f2fe; color: #0369a1; }
+        .badge-open { background: #dcfce7; color: #15803d; }
+        .badge-stop { background: #ffe4e2; color: #b91c1c; }
+
+        .empty-row td {
+            text-align: center;
+            color: #8ba38e;
+            padding: 40px;
+        }
+
+        .footer-note {
+            margin-top: 14px;
+            font-size: 0.7rem;
+            color: #6d8f72;
+            text-align: center;
+        }
+
+        @media (max-width: 860px) {
+            .form-card, .records-card { min-width: 100%; }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="header">
+        <h1>🍽️ 坚朗秦泰报餐系统 · 智能限时版</h1>
+        <p>严格遵守报餐规则 | 午餐限时9:00前 | 晚餐时段9:00-14:30 | 可报未来30天</p>
+    </div>
+
+    <div class="dashboard">
+        <!-- 左侧报餐表单 -->
+        <div class="form-card">
+            <div class="section-title">📋 报餐登记</div>
+            <div class="rule-box">
+                <strong>⏰ 当前服务器参考时间: <span id="liveTimeDisplay">--:--:--</span></strong>
+                🌅 午餐规则：当天 09:00 之后无法报当日午餐，可报次日及未来30天内午餐。<br>
+                🌙 晚餐规则：当天 09:00 ~ 14:30 之间可报当日晚餐；超过14:30或未到9:00无法报当日晚餐，但仍可报次日及未来30天晚餐。<br>
+                📅 所有报餐日期必须在未来30天内（含当天），不可选过去日期。
+            </div>
+            <div class="format-hint">
+                <strong>✍️ 固定格式 (空格分隔)</strong><br>
+                格式：<code>姓名 日期(YYYY-MM-DD) 开/停 午餐/晚餐</code><br>
+                示例：<span style="background:#e9ecef;">张明 2026-05-13 开 午餐</span><br>
+                示例：<span style="background:#e9ecef;">李芳 2026-05-14 停 晚餐</span>
+            </div>
+
+            <div class="input-group">
+                <label>📝 报餐文字</label>
+                <textarea id="mealInput" rows="3" placeholder="例如：王浩然 2026-05-18 开 晚餐" style="font-family: monospace;"></textarea>
+            </div>
+
+            <button id="submitBtn" class="btn btn-primary">✓ 提交报餐记录</button>
+            <div id="formMessage" style="margin-top: 16px; min-height: 44px; text-align: center;"></div>
+        </div>
+
+        <!-- 右侧记录与导出 -->
+        <div class="records-card">
+            <div class="toolbar">
+                <span class="section-title" style="border-left: none; padding-left: 0;">📜 报餐记录表</span>
+                <button id="exportExcelBtn" class="btn export-btn">📎 导出 Excel 汇总</button>
+            </div>
+            <div class="table-wrapper">
+                <table id="mealTable">
+                    <thead>
+                        <tr><th>报餐人</th><th>餐期日期</th><th>开/停</th><th>午/晚餐</th><th>报餐时间(精确)</th></tr>
+                    </thead>
+                    <tbody id="tableBody"><tr class="empty-row"><td colspan="5">暂无报餐记录</td></tr></tbody>
+                </table>
+            </div>
+            <div class="footer-note">
+                💾 数据自动保存在浏览器本地，导出Excel包含所有历史记录。报餐时系统将严格校验日期与时间规则。
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+    // ------------------- 存储key -------------------
+    const STORAGE_KEY = 'JT_Meal_System_V2';
+    let records = [];
+
+    // ------------------- 获取当前真实时间（前端本地时间，用于规则判断，并以服务器时间名义展示，用户可校准） -------------------
+    function getCurrentLocalDateTime() {
+        return new Date();
+    }
+
+    // 格式化 YYYY-MM-DD HH:MM:SS
+    function formatFullDateTime(date) {
+        const y = date.getFullYear();
+        const m = String(date.getMonth() + 1).padStart(2,'0');
+        const d = String(date.getDate()).padStart(2,'0');
+        const hh = String(date.getHours()).padStart(2,'0');
+        const mm = String(date.getMinutes()).padStart(2,'0');
+        const ss = String(date.getSeconds()).padStart(2,'0');
+        return `${y}-${m}-${d} ${hh}:${mm}:${ss}`;
+    }
+
+    // 获取当前时间字符串（仅显示）
+    function updateLiveClock() {
+        const now = getCurrentLocalDateTime();
+        const timeStr = formatFullDateTime(now);
+        const span = document.getElementById('liveTimeDisplay');
+        if (span) span.innerText = timeStr;
+    }
+    setInterval(updateLiveClock, 1000);
+    updateLiveClock();
+
+    // 判断日期是否在 [今天, 今天+30天] 范围内 (包括边界)
+    function isDateWithinNext30Days(dateStr) {
+        const targetDate = new Date(dateStr);
+        if (isNaN(targetDate.getTime())) return false;
+        const today = getCurrentLocalDateTime();
+        today.setHours(0, 0, 0, 0);
+        const maxDate = new Date(today);
+        maxDate.setDate(today.getDate() + 30);
+        maxDate.setHours(23, 59, 59, 999);
+        return targetDate >= today && targetDate <= maxDate;
+    }
+
+    // 检查日期是否为当天 (基于传入的日期字符串与当前日期比较)
+    function isSameDay(dateStr) {
+        const target = new Date(dateStr);
+        const now = getCurrentLocalDateTime();
+        return target.getFullYear() === now.getFullYear() &&
+               target.getMonth() === now.getMonth() &&
+               target.getDate() === now.getDate();
+    }
+
+    // 核心规则校验:
+    // - mealType: '午餐' 或 '晚餐'
+    // - targetDateStr: YYYY-MM-DD
+    // 返回 { valid: boolean, errorMsg: string }
+    function validateMealTimeRule(mealType, targetDateStr) {
+        const now = getCurrentLocalDateTime();
+        const currentHour = now.getHours();
+        const currentMinute = now.getMinutes();
+        const currentMinutesTotal = currentHour * 60 + currentMinute;
+        const isToday = isSameDay(targetDateStr);
+        
+        // 先判断日期范围：必须在未来30天内 (包括今天)
+        if (!isDateWithinNext30Days(targetDateStr)) {
+            return { valid: false, errorMsg: `报餐日期 ${targetDateStr} 超出允许范围（仅限今日起未来30天内）。` };
+        }
+        
+        // 如果是过去日期（严格小于今天）已在上面拦截，isDateWithinNext30Days 保证了 >= 今天
+        
+        // 1. 午餐规则
+        if (mealType === '午餐') {
+            if (isToday) {
+                // 当天午餐：必须在 09:00 之前 (9点整之前，9:00:00 之后不可报)
+                const lunchDeadlineMin = 9 * 60; // 9:00
+                if (currentMinutesTotal >= lunchDeadlineMin) {
+                    return { valid: false, errorMsg: `【午餐规则】今天 ${targetDateStr} 报午餐截止时间为上午 09:00，当前时间已过 ${formatFullDateTime(now).split(' ')[1]}，无法报当天午餐。您可以选择报明天或未来30天内的午餐。` };
+                }
+            } else {
+                // 未来日期午餐：始终允许 (因为日期合法)
+                return { valid: true, errorMsg: "" };
+            }
+        }
+        
+        // 2. 晚餐规则
+        if (mealType === '晚餐') {
+            if (isToday) {
+                // 当天晚餐：允许在 09:00 ~ 14:30 (包含边界9:00整到14:30:00前? 允许14:30之前含14:30?)
+                // 需求: 当天9点-14点30分这段时间可以报当天的晚餐。即 9:00 <= 当前时间 <= 14:30
+                const dinnerStartMin = 9 * 60;      // 9:00
+                const dinnerEndMin = 14 * 60 + 30;  // 14:30
+                if (currentMinutesTotal < dinnerStartMin) {
+                    return { valid: false, errorMsg: `【晚餐规则】今天晚餐报餐从上午 09:00 开始，当前时间 ${formatFullDateTime(now).split(' ')[1]} 还未到开放时间，无法报今日晚餐，可报明天或未来30天晚餐。` };
+                }
+                if (currentMinutesTotal > dinnerEndMin) {
+                    return { valid: false, errorMsg: `【晚餐规则】今天晚餐报餐截止时间为下午 14:30，当前时间已超过 ${formatFullDateTime(now).split(' ')[1]}，无法报今日晚餐，您可以选择明天或未来日期晚餐。` };
+                }
+            } else {
+                // 未来日期晚餐始终允许（未来30天内）
+                return { valid: true, errorMsg: "" };
+            }
+        }
+        
+        return { valid: true, errorMsg: "" };
+    }
+
+    // 解析文本: 姓名 日期(YYYY-MM-DD) 开/停 午餐/晚餐
+    function parseMealText(inputText) {
+        const trimmed = inputText.trim();
+        if (trimmed === "") return { success: false, errorMsg: "内容不能为空" };
+        const parts = trimmed.split(/\s+/);
+        if (parts.length !== 4) {
+            return { success: false, errorMsg: "格式错误，需要4部分: 姓名 日期(YYYY-MM-DD) 开/停 午餐/晚餐，用空格分隔" };
+        }
+        const [nameRaw, dateRaw, statusRaw, mealRaw] = parts;
+        const name = nameRaw.trim();
+        if (!name) return { success: false, errorMsg: "姓名不能为空" };
+        
+        // 日期格式校验
+        const dateRegex = /^\d{4}-\d{2}-\d{2}$/;
+        if (!dateRegex.test(dateRaw)) {
+            return { success: false, errorMsg: "日期格式错误，必须为 YYYY-MM-DD 格式" };
+        }
+        const dateObj = new Date(dateRaw);
+        if (isNaN(dateObj.getTime())) {
+            return { success: false, errorMsg: "无效日期，请确认日期正确性" };
+        }
+        const [year, month, day] = dateRaw.split('-').map(Number);
+        const checkDate = new Date(year, month-1, day);
+        if (checkDate.getFullYear() !== year || checkDate.getMonth() !== month-1 || checkDate.getDate() !== day) {
+            return { success: false, errorMsg: "日期不存在，请检查月份和天数" };
+        }
+        
+        // 开/停 校验
+        let status = "";
+        if (statusRaw === "开") status = "开";
+        else if (statusRaw === "停") status = "停";
+        else return { success: false, errorMsg: '开/停状态只能是 "开" 或 "停"' };
+        
+        // 午/晚餐
+        let mealType = "";
+        if (mealRaw === "午餐") mealType = "午餐";
+        else if (mealRaw === "晚餐") mealType = "晚餐";
+        else return { success: false, errorMsg: '用餐类型只能是 "午餐" 或 "晚餐"' };
+        
+        return {
+            success: true,
+            data: { name, date: dateRaw, status, mealType }
+        };
+    }
+
+    // 获取当前提交时间字符串 YYYY-MM-DD HH:MM:SS
+    function getSubmitTimeStr() {
+        return formatFullDateTime(getCurrentLocalDateTime());
+    }
+
+    // 添加记录
+    function addRecord(parsedData) {
+        const submitTime = getSubmitTimeStr();
+        const newRecord = {
+            id: Date.now() + Math.random() * 10000,
+            name: parsedData.name,
+            date: parsedData.date,
+            status: parsedData.status,
+            mealType: parsedData.mealType,
+            submitTime: submitTime,
+            timestamp: Date.now()
+        };
+        records.unshift(newRecord);
+        records.sort((a,b) => b.timestamp - a.timestamp);
+        saveToLocalStorage();
+        return newRecord;
+    }
+
+    function saveToLocalStorage() {
+        localStorage.setItem(STORAGE_KEY, JSON.stringify(records));
+    }
+
+    function loadRecords() {
+        const stored = localStorage.getItem(STORAGE_KEY);
+        if (stored) {
+            try {
+                let parsed = JSON.parse(stored);
+                if (Array.isArray(parsed)) {
+                    records = parsed;
+                    // 兼容旧数据确保有timestamp
+                    if (records.length && typeof records[0]?.timestamp === 'undefined') {
+                        records = records.map((r, idx) => {
+                            r.timestamp = r.timestamp || (r.id ? (typeof r.id === 'number' ? r.id : Date.now() - idx * 1000) : Date.now() - idx*1000);
+                            return r;
+                        });
+                        records.sort((a,b)=> b.timestamp - a.timestamp);
+                        saveToLocalStorage();
+                    }
+                } else {
+                    records = [];
+                }
+            } catch(e) { records = []; }
+        } else {
+            // 演示样例
+            const nowDate = new Date();
+            const y = nowDate.getFullYear();
+            const m = String(nowDate.getMonth()+1).padStart(2,'0');
+            const d = String(nowDate.getDate()).padStart(2,'0');
+            const tomorrow = new Date(nowDate);
+            tomorrow.setDate(nowDate.getDate()+1);
+            const tY = tomorrow.getFullYear();
+            const tM = String(tomorrow.getMonth()+1).padStart(2,'0');
+            const tD = String(tomorrow.getDate()).padStart(2,'0');
+            records = [
+                { id: 2001, name: "陈坚", date: `${y}-${m}-${d}`, status: "开", mealType: "午餐", submitTime: formatFullDateTime(new Date(nowDate.setHours(8,30,0))), timestamp: Date.now() - 7200000 },
+                { id: 2002, name: "李朗", date: `${tY}-${tM}-${tD}`, status: "停", mealType: "晚餐", submitTime: formatFullDateTime(new Date()), timestamp: Date.now() - 3600000 }
+            ];
+            saveToLocalStorage();
+        }
+    }
+
+    function renderTable() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        if (records.length === 0) {
+            tbody.innerHTML = '<tr class="empty-row"><td colspan="5">暂无报餐记录，请提交报餐～</td></tr>';
+            return;
+        }
+        let html = '';
+        for (let rec of records) {
+            const statusClass = rec.status === '开' ? 'badge-open' : 'badge-stop';
+            const mealClass = rec.mealType === '午餐' ? 'badge-lunch' : 'badge-dinner';
+            html += `<tr>
+                        <td style="font-weight:500;">${escapeHtml(rec.name)}</td>
+                        <td>${escapeHtml(rec.date)}</td>
+                        <td><span class="badge ${statusClass}">${escapeHtml(rec.status)}</span></td>
+                        <td><span class="badge ${mealClass}">${escapeHtml(rec.mealType)}</span></td>
+                        <td style="font-family: monospace;">${escapeHtml(rec.submitTime)}</td>
+                    </tr>`;
+        }
+        tbody.innerHTML = html;
+    }
+
+    function escapeHtml(str) {
+        if (!str) return '';
+        return str.replace(/[&<>]/g, function(m) {
+            if (m === '&') return '&amp;';
+            if (m === '<') return '&lt;';
+            if (m === '>') return '&gt;';
+            return m;
+        });
+    }
+
+    let msgTimeout;
+    function showMessage(msg, isError = true) {
+        const div = document.getElementById('formMessage');
+        if (!div) return;
+        div.innerHTML = `<span style="background:${isError ? '#ffe6e5' : '#e0f2e8'}; color:${isError ? '#b91c1c' : '#166534'}; padding:8px 16px; border-radius: 32px; display:inline-block; font-size:0.85rem;">${isError ? '⚠️ ' : '✔️ '}${msg}</span>`;
+        if (msgTimeout) clearTimeout(msgTimeout);
+        msgTimeout = setTimeout(() => { if(div) div.innerHTML = ''; }, 4000);
+    }
+
+    // 提交主逻辑 + 严格规则
+    function handleSubmit() {
+        const rawText = document.getElementById('mealInput').value;
+        if (!rawText.trim()) {
+            showMessage("请输入报餐内容", true);
+            return;
+        }
+        const parse = parseMealText(rawText);
+        if (!parse.success) {
+            showMessage(parse.errorMsg, true);
+            return;
+        }
+        const { name, date, status, mealType } = parse.data;
+        
+        // 额外规则校验: 日期范围 + 午餐/晚餐时间限制
+        const ruleCheck = validateMealTimeRule(mealType, date);
+        if (!ruleCheck.valid) {
+            showMessage(ruleCheck.errorMsg, true);
+            return;
+        }
+        
+        // 通过，添加记录
+        addRecord({ name, date, status, mealType });
+        renderTable();
+        document.getElementById('mealInput').value = '';
+        showMessage(`✅ 报餐成功！${name} ${date} ${status} ${mealType} (已通过时段校验)`, false);
+    }
+
+    // 导出Excel (字段完整)
+    function exportToExcel() {
+        if (records.length === 0) {
+            showMessage("暂无数据，无法导出", true);
+            return;
+        }
+        const sheetData = [
+            ["报餐人", "餐期日期", "开/停状态", "午餐/晚餐", "报餐时间(精确到秒)"]
+        ];
+        for (let rec of records) {
+            sheetData.push([rec.name, rec.date, rec.status, rec.mealType, rec.submitTime]);
+        }
+        const wb = XLSX.utils.book_new();
+        const ws = XLSX.utils.aoa_to_sheet(sheetData);
+        ws['!cols'] = [{wch:12},{wch:14},{wch:10},{wch:12},{wch:20}];
+        XLSX.utils.book_append_sheet(wb, ws, "坚朗秦泰报餐明细");
+        const nowDate = new Date();
+        const fileDate = `${nowDate.getFullYear()}-${String(nowDate.getMonth()+1).padStart(2,'0')}-${String(nowDate.getDate()).padStart(2,'0')}`;
+        XLSX.writeFile(wb, `坚朗秦泰报餐系统_${fileDate}.xlsx`);
+        showMessage(`导出成功，共 ${records.length} 条记录`, false);
+    }
+
+    function init() {
+        loadRecords();
+        renderTable();
+        document.getElementById('submitBtn').addEventListener('click', handleSubmit);
+        document.getElementById('exportExcelBtn').addEventListener('click', exportToExcel);
+        // 快捷提交 Ctrl+Enter
+        const textarea = document.getElementById('mealInput');
+        if(textarea) {
+            textarea.addEventListener('keydown', (e) => {
+                if ((e.ctrlKey || e.metaKey) && e.key === 'Enter') {
+                    e.preventDefault();
+                    handleSubmit();
+                }
+            });
+        }
+    }
+
+    init();
+</script>
+</body>
+</html>
