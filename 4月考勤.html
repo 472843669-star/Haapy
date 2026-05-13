@@ -1,0 +1,539 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, user-scalable=yes">
+    <title>员工考勤查询系统 | 坚朗秦泰机电</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            background: linear-gradient(145deg, #eef2f7 0%, #d9e2ec 100%);
+            font-family: 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+            padding: 2rem 1rem;
+            min-height: 100vh;
+        }
+
+        .container {
+            max-width: 1350px;
+            margin: 0 auto;
+        }
+
+        /* 公司头部 */
+        .company-header {
+            text-align: center;
+            margin-bottom: 2rem;
+        }
+
+        .company-name {
+            font-size: 1.9rem;
+            font-weight: 700;
+            color: #1a3e50;
+            background: rgba(255,255,245,0.85);
+            display: inline-block;
+            padding: 0.5rem 2rem;
+            border-radius: 80px;
+            backdrop-filter: blur(4px);
+            box-shadow: 0 6px 14px rgba(0,0,0,0.08);
+            letter-spacing: 1px;
+        }
+
+        .period {
+            font-size: 1rem;
+            color: #2c5a6e;
+            margin-top: 12px;
+            font-weight: 500;
+        }
+
+        /* 卡片查询区 */
+        .query-card {
+            background: white;
+            border-radius: 36px;
+            box-shadow: 0 20px 35px -10px rgba(0,0,0,0.2);
+            padding: 1.8rem 2rem;
+            margin-bottom: 2.5rem;
+            transition: all 0.2s;
+            border: 1px solid rgba(255,255,240,0.8);
+        }
+
+        .query-title {
+            font-size: 1.6rem;
+            font-weight: 600;
+            color: #1f4e6a;
+            border-left: 6px solid #f39c12;
+            padding-left: 1rem;
+            margin-bottom: 1.5rem;
+        }
+
+        .form-row {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 1.5rem;
+            align-items: flex-end;
+        }
+
+        .input-group {
+            flex: 1 1 260px;
+        }
+
+        .input-group label {
+            display: block;
+            font-size: 0.85rem;
+            font-weight: 700;
+            color: #2c3e50;
+            margin-bottom: 0.4rem;
+            letter-spacing: 0.5px;
+        }
+
+        .input-group input {
+            width: 100%;
+            padding: 0.85rem 1.2rem;
+            font-size: 1rem;
+            border: 2px solid #e2e8f0;
+            border-radius: 40px;
+            transition: 0.2s;
+            background: #fefefe;
+            outline: none;
+        }
+
+        .input-group input:focus {
+            border-color: #f39c12;
+            box-shadow: 0 0 0 3px rgba(243,156,18,0.2);
+        }
+
+        .btn-query {
+            background: #2c6e9e;
+            border: none;
+            padding: 0.85rem 2rem;
+            border-radius: 40px;
+            font-weight: bold;
+            font-size: 1rem;
+            color: white;
+            cursor: pointer;
+            transition: 0.2s;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
+        }
+
+        .btn-query:hover {
+            background: #1f5480;
+            transform: translateY(-2px);
+            box-shadow: 0 8px 18px rgba(0,0,0,0.15);
+        }
+
+        .reset-btn {
+            background: #95a5a6;
+            box-shadow: none;
+        }
+        .reset-btn:hover {
+            background: #7f8c8d;
+            transform: translateY(-2px);
+        }
+
+        .error-msg {
+            background: #fee2e2;
+            color: #b91c1c;
+            padding: 0.9rem 1.5rem;
+            border-radius: 50px;
+            margin-top: 1.2rem;
+            font-weight: 500;
+            display: none;
+            align-items: center;
+            gap: 8px;
+            border-left: 6px solid #e53e3e;
+        }
+
+        /* 结果卡片 */
+        .result-card {
+            background: white;
+            border-radius: 32px;
+            box-shadow: 0 20px 30px -12px rgba(0,0,0,0.15);
+            overflow: hidden;
+            display: none;
+            animation: fadeUp 0.35s ease;
+        }
+
+        @keyframes fadeUp {
+            from {
+                opacity: 0;
+                transform: translateY(15px);
+            }
+            to {
+                opacity: 1;
+                transform: translateY(0);
+            }
+        }
+
+        .result-header {
+            background: #1f4e6a;
+            padding: 1.2rem 2rem;
+            color: white;
+        }
+
+        .result-header h2 {
+            font-size: 1.5rem;
+            font-weight: 600;
+            display: flex;
+            flex-wrap: wrap;
+            justify-content: space-between;
+            align-items: baseline;
+            gap: 12px;
+        }
+
+        .emp-badge {
+            background: #f39c12;
+            padding: 0.3rem 1.2rem;
+            border-radius: 60px;
+            font-size: 0.9rem;
+            font-weight: normal;
+            letter-spacing: 0.5px;
+        }
+
+        .table-wrapper {
+            overflow-x: auto;
+            padding: 0 0 0.5rem 0;
+        }
+
+        .attendance-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 0.82rem;
+            min-width: 1000px;
+        }
+
+        .attendance-table th, .attendance-table td {
+            border-bottom: 1px solid #e9ecef;
+            padding: 12px 8px;
+            text-align: center;
+            vertical-align: middle;
+        }
+
+        .attendance-table th {
+            background-color: #f8fafc;
+            font-weight: 800;
+            color: #1e4663;
+            border-bottom: 2px solid #cbd5e1;
+            font-size: 0.78rem;
+            letter-spacing: 0.3px;
+        }
+
+        .attendance-table td {
+            color: #1e293b;
+            font-weight: 500;
+        }
+
+        .remark-cell {
+            max-width: 240px;
+            word-break: break-word;
+            white-space: normal;
+            text-align: left !important;
+            font-size: 0.78rem;
+            color: #4b5563;
+        }
+
+        .footer-note {
+            background: #f9fafb;
+            padding: 1rem 2rem;
+            font-size: 0.72rem;
+            color: #4b6b7e;
+            border-top: 1px solid #e2e8f0;
+            text-align: center;
+        }
+
+        @media (max-width: 700px) {
+            .query-card {
+                padding: 1.2rem;
+            }
+            .result-header h2 {
+                font-size: 1.2rem;
+            }
+            .btn-query {
+                padding: 0.7rem 1.2rem;
+            }
+        }
+    </style>
+</head>
+<body>
+<div class="container">
+    <div class="company-header">
+        <div class="company-name">广东坚朗秦泰机电窗控系统有限公司</div>
+        <div class="period">2026年4月1日 — 2026年4月30日 考勤明细查询</div>
+    </div>
+
+    <div class="query-card">
+        <div class="query-title">🔍 员工考勤查询</div>
+        <div class="form-row">
+            <div class="input-group">
+                <label>👤 员工姓名</label>
+                <input type="text" id="empName" placeholder=" " autocomplete="off">
+            </div>
+            <div class="input-group">
+                <label>🆔 身份证号后四位</label>
+                <input type="text" id="idLast4" placeholder=" " maxlength="4" autocomplete="off">
+            </div>
+            <button class="btn-query" id="searchBtn">📋 查询考勤</button>
+            <button class="btn-query reset-btn" id="resetBtn">🗑️ 清空</button>
+        </div>
+        <div id="errorMsg" class="error-msg">⚠️ 未找到匹配记录，请核对姓名及身份证后四位数字</div>
+    </div>
+
+    <div id="resultContainer" class="result-card">
+        <div class="result-header">
+            <h2>
+                <span>📅 2026年4月考勤详情</span>
+                <span class="emp-badge" id="empNameDisp">——</span>
+            </h2>
+        </div>
+        <div class="table-wrapper">
+            <table class="attendance-table" id="attendanceTable">
+                <thead>
+                    <tr><th>部门</th><th>组别</th><th>职位</th><th>周一至周五带薪出勤(H)</th><th>周六例行加班(H)</th><th>周末加班总时数(H)</th><th>周一至周五病假(H)</th><th>周一至周五事假(H)</th><th>周六事假(H)</th><th>旷工(H)</th><th>平日加班(H)</th><th>周末加班(H)</th><th>法定加班(H)</th><th>迟到/早退(元)</th><th>漏打卡扣(元)</th><th>备注</th></tr>
+                </thead>
+                <tbody id="attendanceBody"></tbody>
+            </table>
+        </div>
+        <div class="footer-note">* 依据公司2026年4月考勤汇总表原始记录生成，如有疑问请联系人事行政部。</div>
+    </div>
+</div>
+
+<script>
+    // ---------- 考勤原始数据 (依据上传Sheet3完整导入，共计154条真实记录) ----------
+    const employeesDataset = [
+{name:"英俊明",idLast4:"2494",dept:"总经办",group:"秦泰总经办",position:"总经理",weekdayPaid:176,satRoutine:24,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"彭文婧",idLast4:"1825",dept:"总经办",group:"秦泰总经办",position:"副总经理",weekdayPaid:176,satRoutine:24,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈永红",idLast4:"6211",dept:"市场项目部",group:"订单组",position:"订单组副主管",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"谭文健",idLast4:"0013",dept:"产品研发部/采购部",group:"产品研发部/采购部",position:"产品研发部副部长(代)兼采购部负责人",weekdayPaid:175,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:1.04,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假1小时"},
+{name:"张佩芳",idLast4:"3024",dept:"计划部",group:"计划部",position:"副部长",weekdayPaid:174,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:2,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假2小时"},
+{name:"王达宁",idLast4:"7334",dept:"品质部",group:"IPQC/OQC组",position:"IPQC/OQC组主管",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"雷春叠",idLast4:"7817",dept:"生产部",group:"机加车间",position:"高级铣床师傅",weekdayPaid:176,satRoutine:0,weekendTotal:28.5,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:54,overtimeWeekend:28.5,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"许尔华",idLast4:"3611",dept:"生产部",group:"组装车间",position:"主管",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"霍少英",idLast4:"5320",dept:"物流仓储部",group:"物流仓储部",position:"物流仓储部副主管",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:1,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"张美媛",idLast4:"3347",dept:"物流仓储部",group:"物流仓储部",position:"物流仓储部副主管",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:6.5,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"林艳玲",idLast4:"5623",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:36,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李婵娟",idLast4:"0922",dept:"生产部",group:"组装车间",position:"副主管",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"利金",idLast4:"2574",dept:"生产部",group:"机加车间",position:"物料员",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"刘文威",idLast4:"7314",dept:"生产部",group:"机加车间",position:"主管",weekdayPaid:174,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:2,personalSat:0,absenteeism:0,overtimeWeekday:39,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假2小时"},
+{name:"邓树南",idLast4:"6014",dept:"生产部",group:"电子车间",position:"主管（代）",weekdayPaid:172,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:4,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假4小时"},
+{name:"梁炜民",idLast4:"2117",dept:"市场项目部",group:"销售支持组",position:"高级技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"司徒羡富",idLast4:"4018",dept:"工程研发部",group:"技术组",position:"技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"区华发",idLast4:"0637",dept:"工程研发部",group:"技术组",position:"技术组主管",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"胡德文",idLast4:"0375",dept:"工程研发部",group:"技术组",position:"技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:25,remark:"4月24日漏打卡一次，扣25元"},
+{name:"张雅洁",idLast4:"5028",dept:"总经办",group:"总经办",position:"总经理助理",weekdayPaid:175,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:1.04,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假1小时"},
+{name:"关超群",idLast4:"4025",dept:"计划部",group:"计划部",position:"物控专员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"林健华",idLast4:"2810",dept:"工程研发部",group:"工程研发部",position:"部长",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"刘少红",idLast4:"3606",dept:"生产部",group:"生产部",position:"文员",weekdayPaid:176,satRoutine:0,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:16,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"胡敏",idLast4:"7567",dept:"物流仓储部",group:"二楼材料仓",position:"仓管员",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"区嘉文",idLast4:"4237",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:160,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:16,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假16小时"},
+{name:"蒋丽红",idLast4:"112X",dept:"品质部",group:"品质部",position:"品质部文员",weekdayPaid:168.008,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:8,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假8小时"},
+{name:"黄超平",idLast4:"0315",dept:"生产部",group:"控制箱车间",position:"质检员",weekdayPaid:172,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:4,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:32,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假4小时"},
+{name:"熊文淘",idLast4:"0867",dept:"总经办",group:"秦泰总经办",position:"副总经理",weekdayPaid:176,satRoutine:24,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李群亲",idLast4:"1524",dept:"生产部",group:"电子车间",position:"质检员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"张海文",idLast4:"3252",dept:"总经办",group:"总经办",position:"产品开发组组长/电子工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"王燕",idLast4:"2646",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:30,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"周外雨",idLast4:"4099",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"冯雄杰",idLast4:"4015",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:144,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:32,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假32小时"},
+{name:"梁勤益",idLast4:"3115",dept:"产品研发部",group:"产品研发部",position:"副部长",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"赖小燕",idLast4:"6524",dept:"工程研发部",group:"PE组",position:"电子文员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"莫荣观",idLast4:"3332",dept:"物流仓储部",group:"物流仓储部",position:"材料组长",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李碧霞",idLast4:"4826",dept:"总经办",group:"总经办",position:"高级专员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"冯哲华",idLast4:"401X",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"黄文浩",idLast4:"2614",dept:"工程研发部",group:"维修组",position:"维修员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈家敏",idLast4:"1823",dept:"工程研发部",group:"IE组",position:"IE助理工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:4,missPunch:0,remark:"迟到4分钟，扣4元"},
+{name:"刘秀梅",idLast4:"4748",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:30,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"赵永强",idLast4:"2113",dept:"生产部",group:"控制箱车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:36,overtimeWeekend:32,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"甄艳莲",idLast4:"5126",dept:"工程研发部",group:"施工管理组",position:"跟单主管",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:2,missPunch:0,remark:"迟到2分钟，扣2元"},
+{name:"余银香",idLast4:"0646",dept:"财务部",group:"财务部",position:"总账会计",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李卓新",idLast4:"0616",dept:"市场项目部",group:"销售支持组",position:"初级设计师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:3,missPunch:0,remark:"迟到3分钟，扣3元"},
+{name:"唐乾钟",idLast4:"1812",dept:"品质部",group:"品质部",position:"技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"卢勇",idLast4:"0075",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:160,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:16,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假16小时"},
+{name:"岑璞",idLast4:"2736",dept:"生产部",group:"控制箱车间",position:"组装工",weekdayPaid:175,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:1.04,personalSat:0,absenteeism:0,overtimeWeekday:36,overtimeWeekend:32,overtimeLegal:0,latePenalty:1,missPunch:0,remark:"平日事假1小时，迟到1分钟，扣1元"},
+{name:"黄文敏",idLast4:"1329",dept:"市场项目部",group:"销售支持组",position:"产品专员/兼研发中心产品导入",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"张乾",idLast4:"041X",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:51,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"吴静霞",idLast4:"032X",dept:"品质部",group:"IQC组",position:"IQC组长",weekdayPaid:120,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:56,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:3,missPunch:0,remark:"平日事假56小时，迟到3分钟，扣3元"},
+{name:"李诗",idLast4:"9165",dept:"工程研发部",group:"IE组",position:"IE工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"田小妮",idLast4:"1623",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈玉婷",idLast4:"1629",dept:"人事行政部",group:"人事行政部",position:"行政专员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"伍家盛",idLast4:"1818",dept:"物流仓储部",group:"物流仓储部",position:"原料组长",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈嘉文",idLast4:"7510",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:18,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李欣多",idLast4:"1545",dept:"市场项目部",group:"销售支持组",position:"初级设计师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"区玲君",idLast4:"1528",dept:"工程研发部",group:"工程研发部",position:"工程研发部助理",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李伟梅",idLast4:"1421",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:164,satRoutine:0,weekendTotal:16,sickWeekday:0,personalWeekday:12,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:16,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假12小时"},
+{name:"黄影雪",idLast4:"7521",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:104,satRoutine:0,weekendTotal:8,sickWeekday:40,personalWeekday:32,personalSat:0,absenteeism:0,overtimeWeekday:15,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日住院病假40小时，平日事假32小时"},
+{name:"朱秋霖",idLast4:"6620",dept:"市场项目部",group:"销售支持组",position:"产品专员",weekdayPaid:172,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:4,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假4小时"},
+{name:"张红丽",idLast4:"0547",dept:"人事行政部",group:"人事行政部",position:"人事行政部副部长",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"钟第规",idLast4:"6076",dept:"生产部",group:"电子车间",position:"浸锡工",weekdayPaid:160,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:16,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假16小时"},
+{name:"林健沃",idLast4:"5615",dept:"生产部",group:"生产部",position:"生产部长",weekdayPaid:152,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:24,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"4月30日17:30辞职，平日事假24小时"},
+{name:"王丽",idLast4:"574X",dept:"人事行政部",group:"人事行政部",position:"人事专员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"司徒苏影",idLast4:"7822",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:172,satRoutine:0,weekendTotal:24,sickWeekday:4,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日病假4小时"},
+{name:"肖丽",idLast4:"0044",dept:"工程研发部",group:"施工管理组",position:"跟单员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"梁小梨",idLast4:"0927",dept:"采购部",group:"采购部",position:"采购跟单",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"周美玲",idLast4:"1860",dept:"物流仓储部",group:"二楼材料仓",position:"二楼材料仓管员",weekdayPaid:174,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:2,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假2小时"},
+{name:"沈巧兰",idLast4:"5828",dept:"工程研发部",group:"PE组",position:"机械工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李亚强",idLast4:"4813",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:172,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:4,personalSat:0,absenteeism:0,overtimeWeekday:42,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假4小时"},
+{name:"李凤莲",idLast4:"332X",dept:"计划部",group:"计划部",position:"生产跟单员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"谢伟琼",idLast4:"2646",dept:"物流仓储部",group:"二楼材料仓",position:"二楼材料仓管员",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"何贵红",idLast4:"5613",dept:"生产部",group:"控制箱车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:36,overtimeWeekend:32,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈慧玲",idLast4:"402X",dept:"生产部",group:"组装车间",position:"质检员",weekdayPaid:174.504,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:1.52,personalSat:0,absenteeism:0,overtimeWeekday:27.5,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假1.5小时"},
+{name:"龙新勤",idLast4:"2611",dept:"生产部",group:"组装车间",position:"质检员",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"甄小红",idLast4:"674X",dept:"生产部",group:"组装车间",position:"配件打包员",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"严海云",idLast4:"1421",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:30,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"赵翠莲",idLast4:"3022",dept:"人事行政部",group:"人事行政部",position:"后勤",weekdayPaid:176,satRoutine:0,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:16,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"莫健斌",idLast4:"4817",dept:"生产部",group:"机加车间",position:"数控车学徒",weekdayPaid:176,satRoutine:0,weekendTotal:20,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:54,overtimeWeekend:20,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"郑飞燕",idLast4:"2727",dept:"工程研发部",group:"PE组",position:"ERP文员",weekdayPaid:174,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:2,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假2小时"},
+{name:"叶颖珊",idLast4:"3790",dept:"市场项目部",group:"订单组",position:"订单员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"覃丽凤",idLast4:"0523",dept:"人事行政部",group:"人事行政部",position:"后勤",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"梁秀玲",idLast4:"2124",dept:"计划部",group:"计划部",position:"物控跟单员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"朱明辉",idLast4:"4518",dept:"物流仓储部",group:"成品物料仓储组",position:"发货组长",weekdayPaid:160,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:16,personalSat:0,absenteeism:0,overtimeWeekday:12.5,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假16小时"},
+{name:"郑耀流",idLast4:"1017",dept:"工程研发部",group:"技术组",position:"海外技术员",weekdayPaid:160,satRoutine:24,weekendTotal:24,sickWeekday:0,personalWeekday:16,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:2,missPunch:25,remark:"平日事假16小时，迟到2分钟，扣2元，4月6日漏打卡一次，扣25元"},
+{name:"韦家明",idLast4:"5117",dept:"市场项目部",group:"销售支持组",position:"产品专员",weekdayPaid:64,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"4月10日17:30辞职"},
+{name:"赖光凤",idLast4:"1725",dept:"采购部",group:"采购部",position:"采购跟单",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"杨基杰",idLast4:"3915",dept:"品质部",group:"IQC组",position:"质检员",weekdayPaid:156,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:20,personalSat:0,absenteeism:0,overtimeWeekday:12,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假20小时"},
+{name:"王海湘",idLast4:"7416",dept:"品质部",group:"品质部",position:"品质部长",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"梁云亲",idLast4:"1529",dept:"物流仓储部",group:"物流仓储部",position:"二楼材料仓管员",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:15,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"黄凯",idLast4:"8411",dept:"物流仓储部",group:"物流仓储部",position:"物流仓储部主管",weekdayPaid:133.504,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:42.5,personalSat:0,absenteeism:0,overtimeWeekday:1,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假42.5小时"},
+{name:"莫伟文",idLast4:"3714",dept:"物流仓储部",group:"二楼材料仓",position:"二楼材料仓管员",weekdayPaid:140,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:36,personalSat:0,absenteeism:0,overtimeWeekday:27,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假36小时"},
+{name:"赵世能",idLast4:"1711",dept:"工程研发部",group:"工程研发部",position:"驻外技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"廖煜健",idLast4:"1111",dept:"市场项目部",group:"销售支持组",position:"初级设计师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"叶耀文",idLast4:"1719",dept:"总经办",group:"秦泰总经办",position:"IE工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"谭惠如",idLast4:"0925",dept:"产品研发部",group:"产品研发部",position:"文控专员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈镇宗",idLast4:"4511",dept:"市场项目部",group:"后端业务支持",position:"主管",weekdayPaid:172.504,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:3.52,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:10,missPunch:0,remark:"平日事假3.5小时，迟到10分钟，扣10元"},
+{name:"陈劲超",idLast4:"7558",dept:"品质部",group:"IPQC/OQC组",position:"品质技术员",weekdayPaid:172,satRoutine:0,weekendTotal:21.5,sickWeekday:0,personalWeekday:4,personalSat:0,absenteeism:0,overtimeWeekday:32,overtimeWeekend:21.5,overtimeLegal:0,latePenalty:0,missPunch:25,remark:"平日事假4小时，4月18日漏打卡一次，扣25元"},
+{name:"张松健",idLast4:"3358",dept:"物流仓储部",group:"成品物料仓储组",position:"成品仓管员",weekdayPaid:168,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:8,personalSat:0,absenteeism:0,overtimeWeekday:20.5,overtimeWeekend:0,overtimeLegal:0,latePenalty:8,missPunch:0,remark:"平日事假8小时，迟到8分钟，扣8元"},
+{name:"甄效文",idLast4:"6711",dept:"品质部",group:"IPQC/OQC组",position:"品质技术员",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:30,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李晓雁",idLast4:"2126",dept:"计划部",group:"计划部",position:"计划员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"聂伟恒",idLast4:"661X",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:51,overtimeWeekend:16,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"4月30日17:30急辞"},
+{name:"周仕龙",idLast4:"8019",dept:"品质部",group:"品质部",position:"QE工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈明伟",idLast4:"7538",dept:"生产部",group:"控制箱车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:36,overtimeWeekend:32,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"熊昌",idLast4:"9175",dept:"工程研发部",group:"工程研发部",position:"驻外技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李惠敏",idLast4:"1820",dept:"物流仓储部",group:"二楼材料仓",position:"成品仓管员",weekdayPaid:164,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:12,personalSat:0,absenteeism:0,overtimeWeekday:15.5,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假12小时"},
+{name:"杨帆",idLast4:"2779",dept:"工程研发部",group:"工程研发部",position:"初级技术员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈咏涛",idLast4:"033X",dept:"人事行政部",group:"人事行政部",position:"网络管理员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:7,missPunch:0,remark:"迟到7分钟，扣7元"},
+{name:"李凤明",idLast4:"3526",dept:"市场项目部",group:"市场项目部",position:"运营主管",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"蔡贵任",idLast4:"3018",dept:"物流仓储部",group:"成品物料仓储组",position:"成品仓管员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:21,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈泽伟",idLast4:"5710",dept:"人事行政部",group:"人事行政部",position:"司机",weekdayPaid:173.504,satRoutine:0,weekendTotal:0,sickWeekday:2.48,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日病假2.5小时"},
+{name:"梁丽荷",idLast4:"5225",dept:"财务部",group:"财务部",position:"往来会计",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"张英红",idLast4:"3023",dept:"财务部",group:"财务部",position:"管理会计",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"哺乳假21小时"},
+{name:"容伟现",idLast4:"671X",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:168,satRoutine:0,weekendTotal:24,sickWeekday:8,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:36,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日病假8小时"},
+{name:"林国坚",idLast4:"0312",dept:"人事行政部",group:"人事行政部",position:"水电工",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"彭艳",idLast4:"262X",dept:"财务部",group:"财务部",position:"资金会计",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"刘恩孝",idLast4:"4817",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:20,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:57,overtimeWeekend:20,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"邓玉花",idLast4:"3346",dept:"人事行政部",group:"人事行政部",position:"人事行政专员",weekdayPaid:168,satRoutine:0,weekendTotal:0,sickWeekday:8,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日病假8小时"},
+{name:"李文青",idLast4:"0741",dept:"财务部",group:"财务部",position:"成本会计",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:2,missPunch:0,remark:"迟到2分钟，扣2元"},
+{name:"陈润富",idLast4:"451X",dept:"生产部",group:"机加车间",position:"激光机操作员",weekdayPaid:112,satRoutine:0,weekendTotal:0,sickWeekday:8,personalWeekday:8,personalSat:0,absenteeism:0,overtimeWeekday:30,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"4月23日08:30急辞，平日事假8小时，平日病假8小时"},
+{name:"高永洪",idLast4:"5610",dept:"人事行政部",group:"人事行政部",position:"保安",weekdayPaid:176,satRoutine:60,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:8,overtimeLegal:8,latePenalty:0,missPunch:0,remark:""},
+{name:"朱正雄",idLast4:"4612",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:54,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈宇恒",idLast4:"0616",dept:"产品研发部",group:"机械组",position:"机械工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"伍英进",idLast4:"0015",dept:"人事行政部",group:"人事行政部",position:"保安",weekdayPaid:176,satRoutine:60,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:8,overtimeLegal:8,latePenalty:0,missPunch:0,remark:""},
+{name:"许丽霞",idLast4:"7228",dept:"品质部",group:"IQC组",position:"质检员",weekdayPaid:160,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:16,personalSat:0,absenteeism:0,overtimeWeekday:18,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假16小时"},
+{name:"梁鉴浩",idLast4:"0019",dept:"市场项目部",group:"销售支持组",position:"技术支持员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"汤仕铭",idLast4:"5312",dept:"人事行政部",group:"人事行政部",position:"保安",weekdayPaid:176,satRoutine:48,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:8,overtimeLegal:8,latePenalty:0,missPunch:0,remark:""},
+{name:"吕以毅",idLast4:"5110",dept:"市场项目部",group:"销售支持组",position:"技术支持员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"帅飞燕",idLast4:"5628",dept:"生产部",group:"控制箱车间",position:"组装工",weekdayPaid:168,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:8,personalSat:0,absenteeism:0,overtimeWeekday:34,overtimeWeekend:32,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假8小时"},
+{name:"张炜民",idLast4:"1534",dept:"物流仓储部",group:"一楼材料仓",position:"一楼材料仓管员",weekdayPaid:176,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:18,overtimeWeekend:8,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"栗婷",idLast4:"4526",dept:"工程研发部",group:"工程研发部",position:"售后专员",weekdayPaid:171.504,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:4.48,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假4.5小时"},
+{name:"蒙玉露",idLast4:"1933",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:53.5,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"张瑞祯",idLast4:"2520",dept:"市场项目部",group:"订单组",position:"订单员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"产假"},
+{name:"钟逢胜",idLast4:"3196",dept:"生产部",group:"机加车间",position:"机加工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:57,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"王俊哲",idLast4:"181X",dept:"生产部",group:"组装车间",position:"维修员",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"林心仪",idLast4:"0922",dept:"采购部",group:"采购部",position:"采购跟单",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈晓梅",idLast4:"272X",dept:"物流仓储部",group:"物流仓储部",position:"物流专员",weekdayPaid:153.504,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:22.48,personalSat:0,absenteeism:0,overtimeWeekday:17,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假22.5小时"},
+{name:"林秀明",idLast4:"5421",dept:"生产部",group:"组装车间",position:"组装工",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"洪舰",idLast4:"7532",dept:"市场项目部",group:"销售支持组",position:"产品专员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"温建庆",idLast4:"3312",dept:"生产部",group:"机加车间",position:"激光焊工操作员",weekdayPaid:176,satRoutine:0,weekendTotal:32,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:60,overtimeWeekend:32,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"蔡凯华",idLast4:"0919",dept:"生产部",group:"机加车间",position:"数控车师傅",weekdayPaid:132,satRoutine:0,weekendTotal:8,sickWeekday:0,personalWeekday:44,personalSat:0,absenteeism:0,overtimeWeekday:34,overtimeWeekend:8,overtimeLegal:0,latePenalty:1,missPunch:0,remark:"平日事假44小时，迟到1分钟，扣1元"},
+{name:"伍治权",idLast4:"3550",dept:"生产部",group:"机加车间",position:"线切割操作员",weekdayPaid:176,satRoutine:0,weekendTotal:16,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:54,overtimeWeekend:16,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"吕翔",idLast4:"6338",dept:"市场项目部",group:"海外组",position:"海外跟单员",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:2,missPunch:0,remark:"迟到2分钟，扣2元"},
+{name:"胡延安",idLast4:"4510",dept:"生产部",group:"机加车间",position:"二氧化碳焊工",weekdayPaid:152,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:24,personalSat:0,absenteeism:0,overtimeWeekday:54,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假24小时"},
+{name:"陈发添",idLast4:"1534",dept:"研发中心",group:"电子研发组",position:"电子工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"李达源",idLast4:"2112",dept:"生产部",group:"组装车间",position:"物料员",weekdayPaid:176,satRoutine:0,weekendTotal:24,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:33,overtimeWeekend:24,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"陈灿锦",idLast4:"1518",dept:"产品研发部",group:"机械组",position:"机械工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:""},
+{name:"谢景莹",idLast4:"5310",dept:"市场项目部",group:"订单组",position:"订单员",weekdayPaid:168,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:8,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"平日事假8小时"},
+{name:"黄鑫禹",idLast4:"0033",dept:"工程研发部",group:"工程研发部",position:"驻外技术员",weekdayPaid:13,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:0,missPunch:0,remark:"4月1日入职，4月2日14:30自离"},
+{name:"李锡峰",idLast4:"2112",dept:"工程研发部",group:"PE组",position:"机械工程师",weekdayPaid:176,satRoutine:0,weekendTotal:0,sickWeekday:0,personalWeekday:0,personalSat:0,absenteeism:0,overtimeWeekday:0,overtimeWeekend:0,overtimeLegal:0,latePenalty:9,missPunch:0,remark:"4月1日入职，迟到9分钟，扣9元"}
+    ];
+
+    // DOM
+    const searchBtn = document.getElementById('searchBtn');
+    const resetBtn = document.getElementById('resetBtn');
+    const empNameInput = document.getElementById('empName');
+    const idLast4Input = document.getElementById('idLast4');
+    const errorMsgDiv = document.getElementById('errorMsg');
+    const resultContainer = document.getElementById('resultContainer');
+    const empNameDisp = document.getElementById('empNameDisp');
+    const attendanceBody = document.getElementById('attendanceBody');
+
+    function renderEmployee(emp) {
+        empNameDisp.innerText = `${emp.name} (${emp.idLast4})`;
+        const row = `
+            <tr>
+                <td>${emp.dept || '—'}</td>
+                <td>${emp.group || '—'}</td>
+                <td>${emp.position || '—'}</td>
+                <td>${emp.weekdayPaid ?? 0}</td>
+                <td>${emp.satRoutine ?? 0}</td>
+                <td>${emp.weekendTotal ?? 0}</td>
+                <td>${emp.sickWeekday ?? 0}</td>
+                <td>${emp.personalWeekday ?? 0}</td>
+                <td>${emp.personalSat ?? 0}</td>
+                <td>${emp.absenteeism ?? 0}</td>
+                <td>${emp.overtimeWeekday ?? 0}</td>
+                <td>${emp.overtimeWeekend ?? 0}</td>
+                <td>${emp.overtimeLegal ?? 0}</td>
+                <td>${emp.latePenalty ?? 0}</td>
+                <td>${emp.missPunch ?? 0}</td>
+                <td class="remark-cell">${emp.remark || '—'}</td>
+            </tr>
+        `;
+        attendanceBody.innerHTML = row;
+        resultContainer.style.display = 'block';
+        errorMsgDiv.style.display = 'none';
+        resultContainer.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    }
+
+    function performQuery() {
+        const nameRaw = empNameInput.value.trim();
+        const idRaw = idLast4Input.value.trim();
+        if (!nameRaw || !idRaw) {
+            errorMsgDiv.innerText = '⚠️ 请完整填写姓名及身份证后四位';
+            errorMsgDiv.style.display = 'flex';
+            resultContainer.style.display = 'none';
+            return;
+        }
+        const matched = employeesDataset.find(emp => 
+            emp.name === nameRaw && emp.idLast4.toUpperCase() === idRaw.toUpperCase()
+        );
+        if (matched) {
+            renderEmployee(matched);
+        } else {
+            errorMsgDiv.innerText = `⚠️ 未找到匹配记录，请核对姓名及身份证后四位`;
+            errorMsgDiv.style.display = 'flex';
+            resultContainer.style.display = 'none';
+        }
+    }
+
+    function resetForm() {
+        empNameInput.value = '';
+        idLast4Input.value = '';
+        errorMsgDiv.style.display = 'none';
+        resultContainer.style.display = 'none';
+        attendanceBody.innerHTML = '';
+        empNameDisp.innerText = '——';
+        empNameInput.focus();
+    }
+
+    searchBtn.addEventListener('click', performQuery);
+    resetBtn.addEventListener('click', resetForm);
+    empNameInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') performQuery(); });
+    idLast4Input.addEventListener('keypress', (e) => { if (e.key === 'Enter') performQuery(); });
+    
+    resultContainer.style.display = 'none';
+    errorMsgDiv.style.display = 'none';
+</script>
+</body>
+</html>
