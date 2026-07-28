@@ -1,0 +1,513 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.5, user-scalable=yes">
+  <title>员工薪资明细查询</title>
+  <style>
+    * {
+      box-sizing: border-box;
+      font-family: system-ui, -apple-system, 'Segoe UI', Roboto, 'Helvetica Neue', sans-serif;
+    }
+    body {
+      background: #f4f6fa;
+      margin: 0;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 20px 16px 40px;
+    }
+    .container {
+      max-width: 1280px;
+      width: 100%;
+      background: white;
+      border-radius: 24px;
+      box-shadow: 0 8px 30px rgba(0,0,0,0.06);
+      padding: 28px 24px 32px;
+      transition: all 0.2s;
+    }
+    h1 {
+      font-size: 1.9rem;
+      font-weight: 600;
+      margin: 0 0 6px 0;
+      color: #1e293b;
+      letter-spacing: -0.02em;
+    }
+    .sub {
+      color: #64748b;
+      margin: 0 0 24px 0;
+      border-bottom: 1px solid #e9edf2;
+      padding-bottom: 16px;
+      font-size: 0.95rem;
+    }
+    .search-section {
+      display: flex;
+      flex-wrap: wrap;
+      align-items: center;
+      gap: 12px 16px;
+      margin-bottom: 28px;
+    }
+    .search-wrapper {
+      flex: 1 1 300px;
+      display: flex;
+      align-items: center;
+      background: #f1f5f9;
+      border-radius: 60px;
+      padding: 0 8px 0 20px;
+      border: 1px solid #e2e8f0;
+      transition: 0.2s;
+    }
+    .search-wrapper:focus-within {
+      background: white;
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 3px rgba(59,130,246,0.15);
+    }
+    .search-wrapper input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      padding: 12px 8px 12px 0;
+      font-size: 1rem;
+      outline: none;
+      min-width: 0;
+    }
+    .search-wrapper button {
+      background: #3b82f6;
+      border: none;
+      color: white;
+      font-weight: 500;
+      padding: 8px 18px;
+      border-radius: 40px;
+      font-size: 0.95rem;
+      cursor: pointer;
+      transition: background 0.15s;
+      white-space: nowrap;
+    }
+    .search-wrapper button:hover {
+      background: #2563eb;
+    }
+    .clear-btn {
+      background: #e2e8f0;
+      border: none;
+      padding: 8px 20px;
+      border-radius: 40px;
+      font-size: 0.9rem;
+      font-weight: 500;
+      color: #1e293b;
+      cursor: pointer;
+      transition: 0.15s;
+      white-space: nowrap;
+    }
+    .clear-btn:hover {
+      background: #cbd5e1;
+    }
+    .result-summary {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      margin-bottom: 12px;
+    }
+    .result-count {
+      background: #f1f5f9;
+      padding: 4px 14px;
+      border-radius: 30px;
+      font-size: 0.9rem;
+      color: #334155;
+    }
+    .table-responsive {
+      overflow-x: auto;
+      border-radius: 18px;
+      border: 1px solid #e9edf2;
+      background: white;
+      margin-top: 4px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      font-size: 0.9rem;
+      min-width: 820px;
+    }
+    th {
+      background: #f8fafc;
+      color: #1e293b;
+      font-weight: 600;
+      padding: 14px 10px;
+      white-space: nowrap;
+      border-bottom: 2px solid #e2e8f0;
+      text-align: center;
+    }
+    td {
+      padding: 12px 10px;
+      border-bottom: 1px solid #edf2f7;
+      text-align: center;
+      white-space: nowrap;
+    }
+    tr:last-child td {
+      border-bottom: none;
+    }
+    .highlight-row {
+      background: #f0f7ff !important;
+    }
+    .name-highlight {
+      font-weight: 600;
+      color: #0f172a;
+    }
+    .no-result {
+      text-align: center;
+      padding: 48px 20px;
+      color: #94a3b8;
+      font-size: 1rem;
+    }
+    .footer-note {
+      margin-top: 16px;
+      font-size: 0.8rem;
+      color: #94a3b8;
+      text-align: right;
+    }
+    .badge {
+      background: #e6f0ff;
+      color: #2563eb;
+      border-radius: 40px;
+      padding: 0 14px;
+      font-size: 0.75rem;
+      font-weight: 500;
+      display: inline-block;
+      line-height: 22px;
+    }
+    @media (max-width: 640px) {
+      .container { padding: 18px 12px; }
+      h1 { font-size: 1.6rem; }
+      .search-wrapper { flex: 1 1 100%; }
+    }
+  </style>
+</head>
+<body>
+<div class="container">
+  <h1>💰 薪资明细</h1>
+  <div class="sub">员工薪资构成 · 输入姓名快速检索</div>
+
+  <div class="search-section">
+    <div class="search-wrapper">
+      <input type="text" id="searchInput" placeholder="输入员工姓名，例如 李栋谊" autocomplete="off">
+      <button id="searchBtn">查询</button>
+    </div>
+    <button class="clear-btn" id="clearBtn">显示全部</button>
+  </div>
+
+  <div class="result-summary">
+    <div class="result-count" id="resultCount">共 196 人</div>
+    <div><span class="badge">税前工资 / 合计</span></div>
+  </div>
+
+  <div class="table-responsive" id="tableWrapper">
+    <table id="salaryTable">
+      <thead>
+        <tr>
+          <th>工号</th><th>姓名</th><th>职位</th><th>入职日期</th>
+          <th>底薪</th><th>职务津贴</th><th>岗位工资</th><th>技能补贴</th>
+          <th>住房补助</th><th>伙食补助</th><th>高温补贴</th>
+          <th>全勤奖</th><th>其他加项</th><th>周六加班费</th>
+          <th>绩效工资</th><th>工龄奖</th><th>小时工资</th><th>合计</th><th>税前工资</th>
+        </tr>
+      </thead>
+      <tbody id="tableBody">
+        <!-- 由 JavaScript 动态渲染 -->
+      </tbody>
+    </table>
+    <div id="emptyMessage" class="no-result" style="display: none;">👀 未找到匹配的员工，请调整姓名。</div>
+  </div>
+  <div class="footer-note">数据来源：2026年7月薪资表 · 支持模糊搜索</div>
+</div>
+
+<script>
+  (function() {
+    // ----- 原始数据 (从表格提取，共196行) -----
+    const rawData = [
+      {row:1,code:"24030245",name:"李栋谊",pos:"质量管理工程师",hire:"2024-03-06",base:5370,allow1:0,allow2:0,allow3:1000,allow4:0,allow5:0,allow6:0,attend:120,other:222.57,ot:1481.38,perf:806,seniority:0,hrRate:30.86,total:8999.95,taxBefore:9000},
+      {row:2,code:"23060380",name:"叶耀文",pos:"IE工程师",hire:"2023-06-26",base:5910.41,allow1:0,allow2:200,allow3:700,allow4:0,allow5:0,allow6:0,attend:120,other:257.04,ot:1630.46,perf:1182,seniority:0,hrRate:33.97,total:9999.91,taxBefore:10000},
+      {row:3,code:"18120412",name:"李碧霞",pos:"高级专员",hire:"2018-12-24",base:3646.5,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:112.62,ot:1005.93,perf:364.65,seniority:50,hrRate:20.96,total:5299.7,taxBefore:5300},
+      {row:4,code:"17112002",name:"熊文淘",pos:"副总经理",hire:"2017-11-01",base:20500,allow1:2000,allow2:1757,allow3:0,allow4:1500,allow5:300,allow6:0,attend:120,other:1187.76,ot:5655.17,perf:0,seniority:60,hrRate:117.82,total:33079.93,taxBefore:33080},
+      {row:5,code:"17039060",name:"张雅洁",pos:"总经理助理",hire:"2017-03-21",base:8001.1,allow1:1000,allow2:0,allow3:1000,allow4:0,allow5:0,allow6:0,attend:120,other:390.42,ot:2207.2,perf:1600.22,seniority:70,hrRate:45.98,total:14388.94,taxBefore:14389},
+      {row:6,code:"17039019",name:"彭文婧",pos:"副总经理",hire:"2017-03-01",base:18752.81,allow1:2000,allow2:1500,allow3:0,allow4:1500,allow5:300,allow6:0,attend:0,other:0,ot:5173.19,perf:7177.8,seniority:100,hrRate:107.77,total:36503.8,taxBefore:36504},
+      {row:7,code:"17039018",name:"英俊明",pos:"总经理",hire:"2018-02-08",base:20528.85,allow1:2500,allow2:1189.6,allow3:0,allow4:1500,allow5:300,allow6:0,attend:120,other:0,ot:5663.13,perf:6159,seniority:100,hrRate:117.98,total:38060.58,taxBefore:38061},
+      {row:8,code:"21110079",name:"林健沃",pos:"生产部长",hire:"2021-11-02",base:7339.31,allow1:700,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:348.2,ot:2024.64,perf:1467.86,seniority:20,hrRate:42.18,total:12020.01,taxBefore:12020},
+      {row:9,code:"17072706",name:"刘少红",pos:"生产部文员",hire:"2017-07-19",base:2250,allow1:0,allow2:300,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:33.88,ot:827.59,perf:225,seniority:60,hrRate:12.93,total:3816.47,taxBefore:3816},
+      {row:10,code:"24030665",name:"陈润富",pos:"激光机操作员",hire:"2024-03-28",base:2750,allow1:0,allow2:0,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:68.07,ot:1011.49,perf:0,seniority:0,hrRate:15.8,total:4249.56,taxBefore:4250},
+      {row:11,code:"24030591",name:"吕浩杰",pos:"机加工",hire:"2024-03-22",base:2350,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:40.72,ot:864.37,perf:0,seniority:0,hrRate:13.51,total:3375.09,taxBefore:3375},
+      {row:12,code:"24030327",name:"刘恩孝",pos:"机加工",hire:"2024-03-09",base:2750,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:68.07,ot:1011.49,perf:0,seniority:0,hrRate:15.8,total:3949.56,taxBefore:3950},
+      {row:13,code:"24030053",name:"容伟现",pos:"机加工",hire:"2024-03-01",base:2550,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:54.4,ot:937.93,perf:0,seniority:0,hrRate:14.66,total:3662.33,taxBefore:3662},
+      {row:14,code:"23080058",name:"聂伟恒",pos:"机加工",hire:"2023-08-04",base:2250,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:33.88,ot:827.59,perf:0,seniority:0,hrRate:12.93,total:3731.47,taxBefore:3731},
+      {row:15,code:"23040516",name:"钟春总",pos:"机加工",hire:"2023-04-24",base:2350,allow1:0,allow2:600,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:40.72,ot:864.37,perf:0,seniority:0,hrRate:13.51,total:4075.09,taxBefore:4075},
+      {row:16,code:"23020473",name:"刘光生",pos:"二氧化碳焊工",hire:"2023-02-08",base:3900,allow1:0,allow2:800,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:146.72,ot:1434.48,perf:0,seniority:10,hrRate:22.41,total:6411.2,taxBefore:6411},
+      {row:17,code:"22100157",name:"温华良",pos:"机加工",hire:"2022-10-21",base:2450,allow1:0,allow2:600,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:47.56,ot:901.15,perf:0,seniority:10,hrRate:14.08,total:4128.71,taxBefore:4129},
+      {row:18,code:"22080270",name:"莫健斌",pos:"数控车学徒",hire:"2022-08-19",base:2750,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:68.07,ot:1011.49,perf:0,seniority:10,hrRate:15.8,total:4459.56,taxBefore:4460},
+      {row:19,code:"22050237",name:"屈铭活",pos:"数控车师傅",hire:"2022-05-10",base:3200,allow1:0,allow2:600,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:98.85,ot:1177.01,perf:0,seniority:10,hrRate:18.39,total:5305.86,taxBefore:5306},
+      {row:20,code:"22021536",name:"李亚强",pos:"机加工",hire:"2022-02-28",base:2650,allow1:0,allow2:400,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:61.24,ot:974.71,perf:0,seniority:20,hrRate:15.23,total:4325.95,taxBefore:4326},
+      {row:21,code:"22020145",name:"雷国政",pos:"机加工",hire:"2022-02-12",base:2550,allow1:0,allow2:500,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:54.4,ot:937.93,perf:0,seniority:20,hrRate:14.66,total:4282.33,taxBefore:4282},
+      {row:22,code:"21070055",name:"陈嘉文",pos:"机加工",hire:"2021-07-01",base:2450,allow1:0,allow2:600,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:47.56,ot:901.15,perf:0,seniority:20,hrRate:14.08,total:4138.71,taxBefore:4139},
+      {row:23,code:"20110328",name:"蔡超雄",pos:"激光机操作员",hire:"2020-11-24",base:2750,allow1:0,allow2:600,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:68.07,ot:1011.49,perf:0,seniority:30,hrRate:15.8,total:4579.56,taxBefore:4580},
+      {row:24,code:"20080014",name:"张乾",pos:"机加工",hire:"2020-08-01",base:2550,allow1:500,allow2:400,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:54.4,ot:937.93,perf:0,seniority:30,hrRate:14.66,total:4692.33,taxBefore:4692},
+      {row:25,code:"19030496",name:"冯志恒",pos:"机加工",hire:"2019-03-09",base:2350,allow1:0,allow2:500.28,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:40.72,ot:864.37,perf:0,seniority:50,hrRate:13.51,total:4025.37,taxBefore:4025},
+      {row:26,code:"17039042",name:"刘文威",pos:"机加主管",hire:"2017-03-01",base:3400,allow1:300,allow2:213,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:112.53,ot:1250.57,perf:510,seniority:90,hrRate:19.54,total:5996.1,taxBefore:5996},
+      {row:27,code:"17039041",name:"利金",pos:"机加工",hire:"2017-03-01",base:2300,allow1:0,allow2:500,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:80,hrRate:13.22,total:3983.28,taxBefore:3983},
+      {row:28,code:"17039027",name:"雷春叠",pos:"高级铣床师傅",hire:"2017-03-01",base:2850,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:74.91,ot:1048.28,perf:0,seniority:100,hrRate:16.38,total:4993.19,taxBefore:4993},
+      {row:29,code:"24030601",name:"董俊志",pos:"组装工",hire:"2024-03-23",base:2300,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:0,hrRate:13.22,total:3303.28,taxBefore:3303},
+      {row:30,code:"23070014",name:"黄茂儒",pos:"配件打包员",hire:"2023-07-03",base:2300,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:0,hrRate:13.22,total:3803.28,taxBefore:3803},
+      {row:31,code:"23040477",name:"简丽峰",pos:"配件打包员",hire:"2023-04-21",base:2083.05,allow1:0,allow2:408.3,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:22.46,ot:766.18,perf:0,seniority:0,hrRate:11.97,total:3399.99,taxBefore:3400},
+      {row:32,code:"22060474",name:"严海云",pos:"组装工",hire:"2022-06-27",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:10,hrRate:11.78,total:3654.22,taxBefore:3654},
+      {row:33,code:"22060473",name:"甄小红",pos:"配件打包员",hire:"2022-06-27",base:2050,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:10,hrRate:11.78,total:3454.22,taxBefore:3454},
+      {row:34,code:"22040417",name:"陈凤仙",pos:"组装工",hire:"2022-04-18",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:10,hrRate:11.78,total:3654.22,taxBefore:3654},
+      {row:35,code:"22030925",name:"林永就",pos:"组装工",hire:"2022-03-14",base:2050,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:20,hrRate:11.78,total:3464.22,taxBefore:3464},
+      {row:36,code:"21110162",name:"司徒苏影",pos:"组装工",hire:"2021-11-06",base:2050,allow1:0,allow2:600,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:20,hrRate:11.78,total:3564.22,taxBefore:3564},
+      {row:37,code:"21080538",name:"黄影雪",pos:"组装工",hire:"2021-08-17",base:2150,allow1:0,allow2:600,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:0,seniority:20,hrRate:12.36,total:3907.84,taxBefore:3908},
+      {row:38,code:"21080171",name:"郭笑贞",pos:"组装工",hire:"2021-08-05",base:2150,allow1:0,allow2:600,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:0,seniority:20,hrRate:12.36,total:3907.84,taxBefore:3908},
+      {row:39,code:"21080170",name:"李伟梅",pos:"组装工",hire:"2021-08-05",base:2150,allow1:0,allow2:600,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:0,seniority:20,hrRate:12.36,total:3707.84,taxBefore:3708},
+      {row:40,code:"21020009",name:"田小妮",pos:"组装工",hire:"2021-02-20",base:2050,allow1:0,allow2:400,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:30,hrRate:11.78,total:3474.22,taxBefore:3474},
+      {row:41,code:"20120317",name:"赵明杰",pos:"物料员",hire:"2020-12-15",base:2300,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:30,hrRate:13.22,total:3833.28,taxBefore:3833},
+      {row:42,code:"20070332",name:"卢勇",pos:"组装工",hire:"2020-07-09",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:30,hrRate:11.78,total:3674.22,taxBefore:3674},
+      {row:43,code:"19060714",name:"刘秀梅",pos:"组装工",hire:"2019-06-20",base:2050,allow1:0,allow2:400,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:40,hrRate:11.78,total:3484.22,taxBefore:3484},
+      {row:44,code:"19030341",name:"冯哲华",pos:"组装工",hire:"2019-03-06",base:2150,allow1:0,allow2:400,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:0,seniority:50,hrRate:12.36,total:3537.84,taxBefore:3538},
+      {row:45,code:"19010054",name:"陈杰明",pos:"组装工",hire:"2019-01-01",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:50,hrRate:11.78,total:3694.22,taxBefore:3694},
+      {row:46,code:"18100282",name:"林健敏",pos:"组装工",hire:"2018-10-24",base:2150,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:0,seniority:50,hrRate:12.36,total:3837.84,taxBefore:3838},
+      {row:47,code:"18080100",name:"李达源",pos:"组装工",hire:"2018-08-01",base:2050,allow1:0,allow2:400,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:50,hrRate:11.78,total:3594.22,taxBefore:3594},
+      {row:48,code:"18070976",name:"冯雄杰",pos:"组装工",hire:"2018-07-18",base:2050,allow1:0,allow2:400,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:50,hrRate:11.78,total:3594.22,taxBefore:3594},
+      {row:49,code:"18060766",name:"周外雨",pos:"组装工",hire:"2018-06-30",base:2050,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:50,hrRate:11.78,total:3794.22,taxBefore:3794},
+      {row:50,code:"18032708",name:"王燕",pos:"组装工",hire:"2018-03-17",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:60,hrRate:11.78,total:3704.22,taxBefore:3704},
+      {row:51,code:"17092803",name:"区嘉文",pos:"组装工",hire:"2017-09-01",base:2050,allow1:0,allow2:400,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:60,hrRate:11.78,total:3404.22,taxBefore:3404},
+      {row:52,code:"17039035",name:"李婵娟",pos:"组装副主管",hire:"2017-03-01",base:2500,allow1:200,allow2:150,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:50.98,ot:919.54,perf:375,seniority:100,hrRate:14.37,total:4415.52,taxBefore:4416},
+      {row:53,code:"17039034",name:"林艳玲",pos:"组装工",hire:"2017-03-01",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:90,hrRate:11.78,total:3734.22,taxBefore:3734},
+      {row:54,code:"17039033",name:"黄利嫦",pos:"组装工",hire:"2017-03-01",base:2050,allow1:0,allow2:500,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:100,hrRate:11.78,total:3744.22,taxBefore:3744},
+      {row:55,code:"17039029",name:"许尔华",pos:"组装主管",hire:"2017-03-01",base:3350,allow1:300,allow2:740,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:109.11,ot:1232.18,perf:502.5,seniority:100,hrRate:19.25,total:6753.79,taxBefore:6754},
+      {row:56,code:"21100496",name:"钟第规",pos:"浸锡工",hire:"2021-10-28",base:2300,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:20,hrRate:13.22,total:4123.28,taxBefore:4123},
+      {row:57,code:"20080387",name:"吴瑞华",pos:"焊锡插件工",hire:"2020-08-24",base:2050,allow1:0,allow2:400,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:30,hrRate:11.78,total:3574.22,taxBefore:3574},
+      {row:58,code:"19030333",name:"罗小芳",pos:"焊锡插件工",hire:"2019-03-05",base:2050,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:0,seniority:50,hrRate:11.78,total:3794.22,taxBefore:3794},
+      {row:59,code:"17039049",name:"邓树南",pos:"电子车间主管（代）",hire:"2017-03-01",base:2850,allow1:100,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:74.91,ot:1048.28,perf:427.5,seniority:100,hrRate:16.38,total:5220.69,taxBefore:5221},
+      {row:60,code:"24020408",name:"梁瑞珠",pos:"仓储文员",hire:"2024-02-27",base:2150,allow1:0,allow2:0,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:215,seniority:0,hrRate:12.36,total:3802.84,taxBefore:3803},
+      {row:61,code:"23060172",name:"黄凯",pos:"仓储副主管（代）",hire:"2023-06-10",base:2900,allow1:100,allow2:0,allow3:600,allow4:0,allow5:0,allow6:0,attend:120,other:78.33,ot:1066.67,perf:435,seniority:0,hrRate:16.67,total:5300,taxBefore:5300},
+      {row:62,code:"23060108",name:"梁云亲",pos:"仓储文员",hire:"2023-06-06",base:2278.34,allow1:0,allow2:0,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:35.82,ot:838.01,perf:227.83,seniority:0,hrRate:13.09,total:3700,taxBefore:3700},
+      {row:63,code:"23030220",name:"朱明辉",pos:"出货组长",hire:"2023-03-03",base:2603.82,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:58.08,ot:957.73,perf:260.38,seniority:10,hrRate:14.96,total:4510.01,taxBefore:4510},
+      {row:64,code:"21041014",name:"伍家盛",pos:"材料仓一楼组长",hire:"2021-04-29",base:2532,allow1:0,allow2:400,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:53.17,ot:931.31,perf:253.2,seniority:20,hrRate:14.55,total:4609.68,taxBefore:4610},
+      {row:65,code:"18100294",name:"莫荣观",pos:"材料仓二楼组长",hire:"2018-10-25",base:2988,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:84.35,ot:1099.03,perf:298.8,seniority:50,hrRate:17.17,total:4640.18,taxBefore:4640},
+      {row:66,code:"17039031",name:"张美媛",pos:"仓储副主管（代）",hire:"2017-03-01",base:2550,allow1:100,allow2:286,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:54.4,ot:937.93,perf:382.5,seniority:100,hrRate:14.66,total:4530.83,taxBefore:4531},
+      {row:67,code:"17039030",name:"霍少英",pos:"仓储副主管（代）",hire:"2017-03-01",base:2550,allow1:100,allow2:286,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:54.4,ot:937.93,perf:382.5,seniority:80,hrRate:14.66,total:4510.83,taxBefore:4511},
+      {row:68,code:"24030244",name:"林婉柔",pos:"采购跟单",hire:"2024-03-06",base:2778,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.22,ot:766.34,perf:277.84,seniority:0,hrRate:15.97,total:3999.4,taxBefore:3999},
+      {row:69,code:"23040246",name:"赖光凤",pos:"采购跟单",hire:"2023-04-14",base:3125.71,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.4,ot:862.26,perf:312.57,seniority:0,hrRate:17.96,total:4499.94,taxBefore:4500},
+      {row:70,code:"22090222",name:"宋健莹",pos:"采购跟单",hire:"2022-09-21",base:2639.49,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:48.38,ot:728.14,perf:263.95,seniority:10,hrRate:15.17,total:3809.96,taxBefore:3810},
+      {row:71,code:"21120099",name:"梁小梨",pos:"采购跟单",hire:"2021-12-08",base:3126,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.42,ot:862.34,perf:313,seniority:20,hrRate:17.97,total:4520.76,taxBefore:4521},
+      {row:72,code:"17039047",name:"林振阳",pos:"司机",hire:"2017-03-01",base:2438.08,allow1:0,allow2:0,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:35.53,ot:672.57,perf:243.808,seniority:70,hrRate:14.01,total:3779.99,taxBefore:3780},
+      {row:73,code:"23080328",name:"周仕龙",pos:"品质工程师",hire:"2023-08-28",base:4400,allow1:0,allow2:346,allow3:400,allow4:0,allow5:0,allow6:0,attend:120,other:160.69,ot:1213.79,perf:660,seniority:0,hrRate:25.29,total:7300.48,taxBefore:7300},
+      {row:74,code:"23050001",name:"王海湘",pos:"品质部长",hire:"2023-05-02",base:6040.31,allow1:700,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:265.33,ot:1666.29,perf:1208,seniority:0,hrRate:34.71,total:9999.93,taxBefore:10000},
+      {row:75,code:"17092808",name:"蒋丽红",pos:"品质文员",hire:"2017-09-19",base:2050,allow1:0,allow2:491,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:205,seniority:60,hrRate:11.78,total:3900.22,taxBefore:3900},
+      {row:76,code:"24030170",name:"陈成康",pos:"技术支持员（北方）",hire:"2024-03-04",base:3473,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:101.55,ot:958.07,perf:347.3,seniority:0,hrRate:19.96,total:4999.92,taxBefore:5000},
+      {row:77,code:"23070325",name:"吴先豪",pos:"技术支持员（北方）",hire:"2023-07-17",base:2917,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:66.08,ot:804.69,perf:292,seniority:0,hrRate:16.76,total:4199.77,taxBefore:4200},
+      {row:78,code:"23060379",name:"廖煜健",pos:"技术支持员（北方）",hire:"2023-06-26",base:3056,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:74.95,ot:843.03,perf:306,seniority:0,hrRate:17.56,total:4399.98,taxBefore:4400},
+      {row:79,code:"22040498",name:"洪舰",pos:"副主管",hire:"2022-04-20",base:3751,allow1:200,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:119.29,ot:1034.76,perf:375,seniority:10,hrRate:21.56,total:5610.05,taxBefore:5610},
+      {row:80,code:"24030578",name:"李文青",pos:"成本会计",hire:"2024-03-21",base:4515,allow1:0,allow2:0,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:168.03,ot:1245.52,perf:452,seniority:0,hrRate:25.95,total:7000.55,taxBefore:7001},
+      {row:81,code:"24030302",name:"彭艳",pos:"资金会计",hire:"2024-03-08",base:3820,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:123.69,ot:1053.79,perf:382,seniority:0,hrRate:21.95,total:5499.48,taxBefore:5499},
+      {row:82,code:"24020456",name:"张英红",pos:"总账会计",hire:"2024-02-29",base:3820,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:123.69,ot:1053.79,perf:382,seniority:0,hrRate:21.95,total:5499.48,taxBefore:5499},
+      {row:83,code:"24020442",name:"梁丽荷",pos:"往来会计",hire:"2024-02-28",base:3473,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:101.55,ot:958.07,perf:347,seniority:0,hrRate:19.96,total:4999.62,taxBefore:5000},
+      {row:84,code:"23080091",name:"伍嘉慧",pos:"财务助理",hire:"2023-08-07",base:2778.41,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.24,ot:766.46,perf:277.84,seniority:0,hrRate:15.97,total:3999.95,taxBefore:4000},
+      {row:85,code:"20031421",name:"余银香",pos:"总账会计",hire:"2020-03-16",base:4650,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:176.64,ot:1282.76,perf:465,seniority:40,hrRate:26.72,total:6734.4,taxBefore:6734},
+      {row:86,code:"18100001",name:"伍秀文",pos:"财务主管",hire:"2018-10-05",base:5100,allow1:300,allow2:300,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:205.34,ot:1406.9,perf:765,seniority:50,hrRate:29.31,total:8247.24,taxBefore:8247},
+      {row:87,code:"23060426",name:"谭惠如",pos:"文控专员",hire:"2023-06-29",base:2987,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:70.55,ot:824,perf:299,seniority:0,hrRate:17.17,total:4300.55,taxBefore:4301},
+      {row:88,code:"21070726",name:"陈永湛",pos:"市场产品组组长",hire:"2021-07-17",base:4168,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:145.89,ot:1149.79,perf:416.8,seniority:20,hrRate:23.95,total:6020.48,taxBefore:6020},
+      {row:89,code:"18080207",name:"梁勤益",pos:"技术研发副部长",hire:"2018-08-07",base:6854.78,allow1:700,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:317.29,ot:1890.97,perf:1370.956,seniority:50,hrRate:39.4,total:11304,taxBefore:11304},
+      {row:90,code:"17122402",name:"张海文",pos:"产品开发组组长",hire:"2017-12-07",base:6350,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:285.09,ot:1751.72,perf:635,seniority:60,hrRate:36.49,total:9201.81,taxBefore:9202},
+      {row:91,code:"17039020",name:"谭文健",pos:"技术研发部副部长（代）",hire:"2017-03-01",base:4721.52,allow1:500,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:181.2,ot:1302.49,perf:944.304,seniority:100,hrRate:27.14,total:7869.51,taxBefore:7870},
+      {row:92,code:"19030901",name:"黄文浩",pos:"维修员",hire:"2019-03-21",base:4000.91,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:135.23,ot:1103.7,perf:400.09,seniority:50,hrRate:22.99,total:5809.93,taxBefore:5810},
+      {row:93,code:"24030360",name:"邓玉花",pos:"人事行政专员",hire:"2024-03-11",base:3126,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.42,ot:862.34,perf:312.6,seniority:0,hrRate:17.97,total:4500.36,taxBefore:4500},
+      {row:94,code:"24030054",name:"林国坚",pos:"水电工",hire:"2024-03-01",base:3190,allow1:0,allow2:0,allow3:600,allow4:0,allow5:0,allow6:0,attend:120,other:98.17,ot:1173.33,perf:319,seniority:20,hrRate:18.33,total:5500.5,taxBefore:5501},
+      {row:95,code:"24020364",name:"陈泽伟",pos:"司机",hire:"2024-02-26",base:3126,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.42,ot:862.34,perf:313,seniority:0,hrRate:17.97,total:4500.76,taxBefore:4501},
+      {row:96,code:"23120050",name:"陈咏涛",pos:"网络管理员",hire:"2023-12-11",base:3612,allow1:0,allow2:300,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:110.42,ot:996.41,perf:361,seniority:0,hrRate:20.76,total:5999.83,taxBefore:6000},
+      {row:97,code:"23020217",name:"覃丽凤",pos:"后勤",hire:"2023-02-03",base:2014.35,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:8.5,ot:555.68,perf:201.43,seniority:10,hrRate:11.58,total:2909.96,taxBefore:2910},
+      {row:98,code:"22060501",name:"赵翠莲",pos:"后勤",hire:"2022-06-28",base:1952.86,allow1:0,allow2:300,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:13.56,ot:718.29,perf:195.29,seniority:10,hrRate:11.22,total:3310,taxBefore:3310},
+      {row:99,code:"21110149",name:"王丽",pos:"人事专员",hire:"2021-11-05",base:3195.17,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:83.83,ot:881.43,perf:319.52,seniority:20,hrRate:18.36,total:4619.95,taxBefore:4620},
+      {row:100,code:"21090727",name:"张红丽",pos:"人事行政副部长",hire:"2021-09-22",base:5521,allow1:500,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:232.2,ot:1523.03,perf:1104.2,seniority:20,hrRate:31.73,total:9020.43,taxBefore:9020},
+      {row:101,code:"21031393",name:"陈玉婷",pos:"行政专员",hire:"2021-03-15",base:3334,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:92.69,ot:919.72,perf:333,seniority:30,hrRate:19.16,total:4829.41,taxBefore:4829},
+      {row:102,code:"18100153",name:"马耀荣",pos:"保安",hire:"2018-10-11",base:1169.75,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:80,other:0,ot:430.25,perf:0,seniority:50,hrRate:6.72,total:1730,taxBefore:1730},
+      {row:103,code:"17039050",name:"傅森荣",pos:"保安",hire:"2017-03-01",base:1169.75,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:80,other:0,ot:430.25,perf:0,seniority:80,hrRate:6.72,total:1760,taxBefore:1760},
+      {row:104,code:"17039048",name:"马保根",pos:"保安",hire:"2017-03-01",base:1169.75,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:80,other:0,ot:430.25,perf:0,seniority:70,hrRate:6.72,total:1750,taxBefore:1750},
+      {row:105,code:"23070153",name:"聂婉雯(Petty)",pos:"项目助理",hire:"2023-07-07",base:0,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:0,other:0,ot:0,perf:0,seniority:0,hrRate:0,total:0,taxBefore:0},
+      {row:106,code:"23070151",name:"陈泇文 (Carmen)",pos:"项目助理",hire:"2023-07-07",base:0,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:0,other:0,ot:0,perf:0,seniority:0,hrRate:0,total:0,taxBefore:0},
+      {row:107,code:"23030670",name:"何国洋（Wendy）",pos:"跟单专员",hire:"2023-03-23",base:0,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:0,other:0,ot:0,perf:0,seniority:10,hrRate:0,total:10,taxBefore:10},
+      {row:108,code:"21041016",name:"冯月娟",pos:"海外跟单员",hire:"2021-04-29",base:0,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:0,other:0,ot:0,perf:0,seniority:20,hrRate:0,total:20,taxBefore:20},
+      {row:109,code:"18110320",name:"曾彩连",pos:"总经理",hire:"2018-11-28",base:0,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:0,other:0,ot:0,perf:0,seniority:50,hrRate:0,total:50,taxBefore:50},
+      {row:110,code:"23070230",name:"何月明",pos:"跟单员",hire:"2023-07-11",base:2431,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:35.08,ot:670.62,perf:243,seniority:0,hrRate:13.97,total:3499.7,taxBefore:3500},
+      {row:111,code:"23070108",name:"李晓雁",pos:"计划员",hire:"2023-07-05",base:2987,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:70.55,ot:824,perf:298.7,seniority:0,hrRate:17.17,total:4300.25,taxBefore:4300},
+      {row:112,code:"23030015",name:"梁秀玲",pos:"物控跟单员",hire:"2023-03-01",base:2917.33,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:66.11,ot:804.78,perf:291.73,seniority:10,hrRate:16.77,total:4209.95,taxBefore:4210},
+      {row:113,code:"22030156",name:"李凤莲",pos:"生产跟单员",hire:"2022-03-01",base:2743.68,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:55.03,ot:756.88,perf:274.37,seniority:20,hrRate:15.77,total:3969.96,taxBefore:3970},
+      {row:114,code:"17049023",name:"关超群",pos:"物控专员",hire:"2017-04-24",base:2813.14,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:59.46,ot:776.04,perf:281.31,seniority:60,hrRate:16.17,total:4109.95,taxBefore:4110},
+      {row:115,code:"17039021",name:"张佩芳",pos:"计划部副部长",hire:"2017-03-01",base:5212.85,allow1:1000,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:212.54,ot:1438.03,perf:1042.57,seniority:100,hrRate:29.96,total:9125.99,taxBefore:9126},
+      {row:116,code:"24020276",name:"李坤城",pos:"组装工",hire:"2024-02-23",base:2300,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:0,hrRate:13.22,total:3303.28,taxBefore:3303},
+      {row:117,code:"23100190",name:"陈明伟",pos:"组装工",hire:"2023-10-23",base:2300,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:0,seniority:0,hrRate:13.22,total:4103.28,taxBefore:4103},
+      {row:118,code:"22030410",name:"何贵红",pos:"组装工",hire:"2022-03-03",base:2400,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:44.14,ot:882.76,perf:0,seniority:20,hrRate:13.79,total:4266.9,taxBefore:4267},
+      {row:119,code:"20070358",name:"岑璞",pos:"组装工",hire:"2020-07-11",base:2500,allow1:0,allow2:600,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:50.98,ot:919.54,perf:0,seniority:30,hrRate:14.37,total:4520.52,taxBefore:4521},
+      {row:120,code:"19060834",name:"赵永强",pos:"组装工",hire:"2019-06-27",base:2400,allow1:0,allow2:500,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:44.14,ot:882.76,perf:0,seniority:40,hrRate:13.79,total:4286.9,taxBefore:4287},
+      {row:121,code:"21090717",name:"陈均恒",pos:"电子技术员",hire:"2021-09-22",base:3473,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:101.55,ot:958.07,perf:347,seniority:20,hrRate:19.96,total:5019.62,taxBefore:5020},
+      {row:122,code:"18060768",name:"谭卫勤",pos:"电子工程师",hire:"2018-06-06",base:6112.5,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:269.94,ot:1686.21,perf:611.25,seniority:50,hrRate:35.13,total:8849.9,taxBefore:8850},
+      {row:123,code:"22050310",name:"霍江峰",pos:"机械工程师",hire:"2022-05-13",base:5556.82,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:234.49,ot:1532.92,perf:555.68,seniority:10,hrRate:31.94,total:8009.91,taxBefore:8010},
+      {row:124,code:"17039059",name:"韦龙",pos:"打样技术员",hire:"2017-03-01",base:3466.33,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:117.07,ot:1274.97,perf:346.633,seniority:90,hrRate:19.92,total:5415,taxBefore:5415},
+      {row:125,code:"23040431",name:"杨基杰",pos:"质检员",hire:"2023-04-20",base:2000,allow1:0,allow2:400,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:16.78,ot:735.63,perf:200,seniority:0,hrRate:11.49,total:3772.41,taxBefore:3772},
+      {row:126,code:"23030417",name:"黄士枥",pos:"质检员",hire:"2023-03-10",base:2000,allow1:0,allow2:300,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:16.78,ot:735.63,perf:200,seniority:10,hrRate:11.49,total:3682.41,taxBefore:3682},
+      {row:127,code:"20100201",name:"吴静霞",pos:"质检员",hire:"2020-10-16",base:2300,allow1:0,allow2:400,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:230,seniority:30,hrRate:13.22,total:4263.28,taxBefore:4263},
+      {row:128,code:"20060476",name:"唐乾钟",pos:"质检员",hire:"2020-06-22",base:2500,allow1:0,allow2:450,allow3:600,allow4:0,allow5:0,allow6:0,attend:120,other:50.98,ot:919.54,perf:250,seniority:30,hrRate:14.37,total:4920.52,taxBefore:4921},
+      {row:129,code:"23080302",name:"刘少芳",pos:"质检员",hire:"2023-08-25",base:2000,allow1:0,allow2:300,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:16.78,ot:735.63,perf:200,seniority:0,hrRate:11.49,total:3672.41,taxBefore:3672},
+      {row:130,code:"23070021",name:"甄效文",pos:"品质技术员",hire:"2023-07-03",base:2300,allow1:0,allow2:867,allow3:400,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:230,seniority:0,hrRate:13.22,total:4800.28,taxBefore:4800},
+      {row:131,code:"23070012",name:"陈劲超",pos:"品质技术员",hire:"2023-07-03",base:2300,allow1:0,allow2:867,allow3:600,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:230,seniority:0,hrRate:13.22,total:5000.28,taxBefore:5000},
+      {row:132,code:"22031094",name:"龙新勤",pos:"质检员",hire:"2022-03-17",base:2050,allow1:0,allow2:395,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:205,seniority:20,hrRate:11.78,total:3864.22,taxBefore:3864},
+      {row:133,code:"22030878",name:"陈慧玲",pos:"质检员",hire:"2022-03-14",base:2000,allow1:0,allow2:399,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:16.78,ot:735.63,perf:200,seniority:20,hrRate:11.49,total:3991.41,taxBefore:3991},
+      {row:134,code:"21110203",name:"李俊姬",pos:"质检员",hire:"2021-11-09",base:1950,allow1:0,allow2:305,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:13.36,ot:717.24,perf:195,seniority:20,hrRate:11.21,total:3820.6,taxBefore:3821},
+      {row:135,code:"21020463",name:"赵洁芳",pos:"质检员",hire:"2021-02-27",base:1900,allow1:0,allow2:210,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:9.94,ot:698.85,perf:190,seniority:30,hrRate:10.92,total:3458.79,taxBefore:3459},
+      {row:136,code:"17112003",name:"李群亲",pos:"质检员",hire:"2017-11-01",base:2050,allow1:0,allow2:245,allow3:250,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:205,seniority:60,hrRate:11.78,total:3704.22,taxBefore:3704},
+      {row:137,code:"17103109",name:"黄超平",pos:"质检员",hire:"2017-10-24",base:2050,allow1:0,allow2:195,allow3:100,allow4:0,allow5:0,allow6:0,attend:120,other:20.2,ot:754.02,perf:205,seniority:60,hrRate:11.78,total:3504.22,taxBefore:3504},
+      {row:138,code:"17039025",name:"王达宁",pos:"IPQC/OQC组主管",hire:"2017-03-01",base:2699.78,allow1:300,allow2:880,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:64.64,ot:993.02,perf:404.967,seniority:80,hrRate:15.52,total:5542.41,taxBefore:5542},
+      {row:139,code:"24020409",name:"余永岸",pos:"订单员",hire:"2024-02-27",base:2848,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:61.68,ot:785.66,perf:284.8,seniority:0,hrRate:16.37,total:4100.14,taxBefore:4100},
+      {row:140,code:"23110005",name:"龙薪竹",pos:"订单员",hire:"2023-11-01",base:3125.71,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.4,ot:862.26,perf:313,seniority:0,hrRate:17.96,total:4500.37,taxBefore:4500},
+      {row:141,code:"22120030",name:"叶颖珊",pos:"订单员",hire:"2022-12-05",base:3334.09,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:92.69,ot:919.75,perf:333.41,seniority:10,hrRate:19.16,total:4809.94,taxBefore:4810},
+      {row:142,code:"21080753",name:"朱秋霖",pos:"订单员",hire:"2021-08-25",base:3125.71,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.4,ot:862.26,perf:312.57,seniority:20,hrRate:17.96,total:4519.94,taxBefore:4520},
+      {row:143,code:"17039024",name:"王俊杰",pos:"设计组主管",hire:"2017-03-01",base:4766.21,allow1:300,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:184.05,ot:1314.82,perf:714.9315,seniority:100,hrRate:27.39,total:7500.01,taxBefore:7500},
+      {row:144,code:"24030359",name:"苏俊杰",pos:"技术支持员（南方）",hire:"2024-03-11",base:2778,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.22,ot:766.34,perf:277.84,seniority:0,hrRate:15.97,total:3999.4,taxBefore:3999},
+      {row:145,code:"23030805",name:"李灿健",pos:"技术支持员（南方）",hire:"2023-03-31",base:2778.41,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.24,ot:766.46,perf:277.84,seniority:10,hrRate:15.97,total:4009.95,taxBefore:4010},
+      {row:146,code:"21070563",name:"李欣多",pos:"初级设计员（南方）",hire:"2021-07-09",base:3612,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:110.42,ot:996.41,perf:361.2,seniority:20,hrRate:20.76,total:5220.03,taxBefore:5220},
+      {row:147,code:"20070717",name:"黄文敏",pos:"产品专员",hire:"2020-07-27",base:2917.37,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:66.11,ot:804.79,perf:291.737,seniority:30,hrRate:16.77,total:4230.01,taxBefore:4230},
+      {row:148,code:"17039055",name:"梁炜民",pos:"主管",hire:"2017-03-01",base:6484.72,allow1:300,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:293.68,ot:1788.89,perf:972.708,seniority:100,hrRate:37.27,total:10060,taxBefore:10060},
+      {row:149,code:"24030625",name:"黄俊杰",pos:"技术支持员（华东）",hire:"2024-03-25",base:3126,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.42,ot:862.34,perf:313,seniority:0,hrRate:17.97,total:4500.76,taxBefore:4501},
+      {row:150,code:"24030357",name:"潘润松",pos:"技术支持员（华东）",hire:"2024-03-11",base:3473,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:101.55,ot:958.07,perf:347.3,seniority:0,hrRate:19.96,total:4999.92,taxBefore:5000},
+      {row:151,code:"23060431",name:"陈镇宗",pos:"副主管",hire:"2023-06-30",base:3542.47,allow1:200,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:105.99,ot:977.23,perf:354.25,seniority:0,hrRate:20.36,total:5299.94,taxBefore:5300},
+      {row:152,code:"23040244",name:"韦家明",pos:"产品专员",hire:"2023-04-13",base:2986.79,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:70.54,ot:823.94,perf:298.68,seniority:0,hrRate:17.17,total:4299.95,taxBefore:4300},
+      {row:153,code:"20040503",name:"李卓新",pos:"初级设计员（华东）",hire:"2020-04-10",base:3181,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:82.93,ot:877.52,perf:318.1,seniority:30,hrRate:18.28,total:4609.55,taxBefore:4610},
+      {row:154,code:"23030623",name:"郑耀流",pos:"初级项目经理",hire:"2023-03-21",base:3356,allow1:0,allow2:500,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.09,ot:925.79,perf:503.4,seniority:10,hrRate:19.29,total:7009.28,taxBefore:7009},
+      {row:155,code:"22031278",name:"柳腱宗",pos:"技术组技术员",hire:"2022-03-24",base:3125.71,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:79.4,ot:862.26,perf:312.57,seniority:20,hrRate:17.96,total:4519.94,taxBefore:4520},
+      {row:156,code:"17039058",name:"胡德文",pos:"技术组技术员",hire:"2017-03-01",base:3212.53,allow1:0,allow2:0,allow3:0,allow4:500,allow5:0,allow6:0,attend:0,other:0,ot:886.22,perf:321.253,seniority:100,hrRate:18.46,total:5020,taxBefore:5020},
+      {row:157,code:"17039057",name:"区华发",pos:"技术组主管",hire:"2017-03-01",base:3099.88,allow1:300,allow2:0,allow3:0,allow4:500,allow5:0,allow6:0,attend:0,other:0,ot:855.14,perf:464.982,seniority:100,hrRate:17.82,total:5320,taxBefore:5320},
+      {row:158,code:"17039056",name:"司徒羡富",pos:"技术组技术员",hire:"2017-03-01",base:3212.53,allow1:0,allow2:0,allow3:0,allow4:500,allow5:0,allow6:0,attend:0,other:0,ot:886.22,perf:321.253,seniority:100,hrRate:18.46,total:5020,taxBefore:5020},
+      {row:159,code:"24030169",name:"原子豪",pos:"驻外技术员",hire:"2024-03-04",base:2778,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.22,ot:766.34,perf:277.84,seniority:0,hrRate:15.97,total:3999.4,taxBefore:3999},
+      {row:160,code:"24020441",name:"王代璐",pos:"售后专员",hire:"2024-02-28",base:2848,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:61.68,ot:785.66,perf:284.8,seniority:0,hrRate:16.37,total:4100.14,taxBefore:4100},
+      {row:161,code:"24020229",name:"谢浩明",pos:"驻外技术员",hire:"2024-02-23",base:2778,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.22,ot:766.34,perf:277.84,seniority:0,hrRate:15.97,total:3999.4,taxBefore:3999},
+      {row:162,code:"23110137",name:"杨帆",pos:"驻外技术员",hire:"2023-11-21",base:3356.48,allow1:0,allow2:0,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.12,ot:925.93,perf:503.47,seniority:0,hrRate:19.29,total:6500,taxBefore:6500},
+      {row:163,code:"23100235",name:"梁和林",pos:"驻外技术员",hire:"2023-10-31",base:3356.48,allow1:0,allow2:0,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.12,ot:925.93,perf:503.47,seniority:0,hrRate:19.29,total:6500,taxBefore:6500},
+      {row:164,code:"23100233",name:"熊昌",pos:"驻外技术员",hire:"2023-10-30",base:2778.41,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:57.24,ot:766.46,perf:277.84,seniority:0,hrRate:15.97,total:3999.95,taxBefore:4000},
+      {row:165,code:"23080337",name:"詹浩汉",pos:"驻外技术员",hire:"2023-08-29",base:3356.48,allow1:0,allow2:0,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.12,ot:925.93,perf:503.47,seniority:0,hrRate:19.29,total:6500,taxBefore:6500},
+      {row:166,code:"23070435",name:"黄承锦",pos:"驻外技术员",hire:"2023-07-24",base:3356.48,allow1:0,allow2:0,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.12,ot:925.93,perf:503.47,seniority:0,hrRate:19.29,total:6500,taxBefore:6500},
+      {row:167,code:"23070328",name:"袁德亮",pos:"驻外技术员",hire:"2023-07-17",base:3356.48,allow1:0,allow2:0,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.12,ot:925.93,perf:503.47,seniority:0,hrRate:19.29,total:6500,taxBefore:6500},
+      {row:168,code:"23060229",name:"赵世能",pos:"驻外技术员",hire:"2023-06-14",base:3356,allow1:0,allow2:0,allow3:500,allow4:0,allow5:1000,allow6:0,attend:120,other:94.09,ot:925.79,perf:503,seniority:0,hrRate:19.29,total:6498.88,taxBefore:6499},
+      {row:169,code:"21070923",name:"区玲君",pos:"工程部助理",hire:"2021-07-23",base:2917.33,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:66.11,ot:804.78,perf:291.73,seniority:20,hrRate:16.77,total:4219.95,taxBefore:4220},
+      {row:170,code:"17072703",name:"林健华",pos:"工程部部长",hire:"2017-07-03",base:6689.81,allow1:700,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:306.76,ot:1845.46,perf:1337.96,seniority:60,hrRate:38.45,total:11059.99,taxBefore:11060},
+      {row:171,code:"20110271",name:"李诗",pos:"IE工程师",hire:"2020-11-17",base:5071,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:203.49,ot:1398.9,perf:507,seniority:30,hrRate:29.14,total:7330.39,taxBefore:7330},
+      {row:172,code:"19060039",name:"陈家敏",pos:"IE助理工程师",hire:"2019-06-03",base:3473,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:101.55,ot:958.07,perf:347,seniority:40,hrRate:19.96,total:5039.62,taxBefore:5040},
+      {row:173,code:"22100225",name:"郑飞燕",pos:"ERP文员",hire:"2022-10-31",base:2847.87,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:61.67,ot:785.62,perf:284.79,seniority:10,hrRate:16.37,total:4109.95,taxBefore:4110},
+      {row:174,code:"22021077",name:"沈巧兰",pos:"机械工程师",hire:"2022-02-22",base:4514.92,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:168.02,ot:1245.5,perf:451.49,seniority:20,hrRate:25.95,total:6519.93,taxBefore:6520},
+      {row:175,code:"18080368",name:"赖小燕",pos:"电子文员",hire:"2018-08-20",base:3060,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:75.21,ot:844.14,perf:306,seniority:50,hrRate:17.59,total:4455.35,taxBefore:4455},
+      {row:176,code:"24030579",name:"梁美怡",pos:"跟单员",hire:"2024-03-21",base:2848,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:61.68,ot:785.66,perf:284.8,seniority:0,hrRate:16.37,total:4100.14,taxBefore:4100},
+      {row:177,code:"24030494",name:"梁斯敏",pos:"跟单员",hire:"2024-03-18",base:2848,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:61.68,ot:785.66,perf:284.8,seniority:0,hrRate:16.37,total:4100.14,taxBefore:4100},
+      {row:178,code:"21110311",name:"肖丽",pos:"跟单员",hire:"2021-11-16",base:2917,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:66.08,ot:804.69,perf:292,seniority:20,hrRate:16.76,total:4219.77,taxBefore:4220},
+      {row:179,code:"19100244",name:"甄艳莲",pos:"跟单主管",hire:"2019-10-21",base:3550.9,allow1:200,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:106.52,ot:979.56,perf:532.635,seniority:40,hrRate:20.41,total:5529.62,taxBefore:5530},
+      {row:180,code:"23120052",name:"李凤明",pos:"运营组主管",hire:"2023-12-11",base:3491,allow1:300,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:102.7,ot:963.03,perf:524,seniority:0,hrRate:20.06,total:5500.73,taxBefore:5501},
+      {row:181,code:"23030052",name:"钟青萍",pos:"运营专员",hire:"2023-03-02",base:2986.79,allow1:0,allow2:0,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:70.54,ot:823.94,perf:298.68,seniority:10,hrRate:17.17,total:4309.95,taxBefore:4310},
+      {row:182,code:"23120085",name:"饶洪涛",pos:"一楼材料仓管员",hire:"2023-12-14",base:2150,allow1:0,allow2:97,allow3:0,allow4:0,allow5:0,allow6:300,attend:120,other:27.04,ot:790.8,perf:215,seniority:0,hrRate:12.36,total:3699.84,taxBefore:3700},
+      {row:183,code:"23090129",name:"潘国聚",pos:"一楼材料仓管员",hire:"2023-09-12",base:2150,allow1:0,allow2:97,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:215,seniority:0,hrRate:12.36,total:3699.84,taxBefore:3700},
+      {row:184,code:"23040654",name:"严权威",pos:"一楼材料仓管员",hire:"2023-04-28",base:2083.05,allow1:0,allow2:500,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:22.46,ot:766.18,perf:208.31,seniority:0,hrRate:11.97,total:3700,taxBefore:3700},
+      {row:185,code:"21110371",name:"陈柏帆",pos:"一楼材料仓管员",hire:"2021-11-19",base:2083.05,allow1:0,allow2:390,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:22.46,ot:766.18,perf:208.31,seniority:20,hrRate:11.97,total:3610,taxBefore:3610},
+      {row:186,code:"23110006",name:"李惠敏",pos:"二楼材料仓管员",hire:"2023-11-01",base:2150,allow1:0,allow2:197,allow3:400,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:215,seniority:0,hrRate:12.36,total:3899.84,taxBefore:3900},
+      {row:187,code:"23060220",name:"莫伟文",pos:"二楼材料仓管员",hire:"2023-06-13",base:2250,allow1:0,allow2:44,allow3:200,allow4:0,allow5:0,allow6:300,attend:120,other:33.88,ot:827.59,perf:225,seniority:0,hrRate:12.93,total:4000.47,taxBefore:4000},
+      {row:188,code:"22030158",name:"谢伟琼",pos:"二楼材料仓管员",hire:"2022-03-01",base:2344,allow1:0,allow2:0,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:40.31,ot:862.16,perf:234.4,seniority:20,hrRate:13.47,total:3920.87,taxBefore:3921},
+      {row:189,code:"22020314",name:"周美玲",pos:"二楼材料仓管员",hire:"2022-02-15",base:2344,allow1:0,allow2:0,allow3:300,allow4:0,allow5:0,allow6:0,attend:120,other:40.31,ot:862.16,perf:234.4,seniority:20,hrRate:13.47,total:3920.87,taxBefore:3921},
+      {row:190,code:"17083003",name:"胡敏",pos:"二楼材料仓管员",hire:"2017-08-25",base:2300,allow1:0,allow2:117,allow3:0,allow4:0,allow5:0,allow6:0,attend:120,other:37.3,ot:845.98,perf:230,seniority:60,hrRate:13.22,total:3710.28,taxBefore:3710},
+      {row:191,code:"24020407",name:"周干芬",pos:"ERP文员",hire:"2024-02-27",base:2150,allow1:0,allow2:0,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:27.04,ot:790.8,perf:215,seniority:0,hrRate:12.36,total:3802.84,taxBefore:3803},
+      {row:192,code:"24020006",name:"蔡贵任",pos:"成品仓管员",hire:"2024-02-19",base:2350,allow1:0,allow2:0,allow3:290,allow4:0,allow5:0,allow6:300,attend:120,other:40.72,ot:864.37,perf:235,seniority:0,hrRate:13.51,total:4200.09,taxBefore:4200},
+      {row:193,code:"23090103",name:"段付娟",pos:"物流跟单员",hire:"2023-09-08",base:2620,allow1:0,allow2:190,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:59.18,ot:963.68,perf:262,seniority:0,hrRate:15.06,total:4714.86,taxBefore:4715},
+      {row:194,code:"23070187",name:"朱俊炫",pos:"成品备料员",hire:"2023-07-10",base:2200,allow1:0,allow2:21,allow3:300,allow4:0,allow5:0,allow6:300,attend:120,other:30.46,ot:809.2,perf:220,seniority:0,hrRate:12.64,total:4000.66,taxBefore:4001},
+      {row:195,code:"23070078",name:"周富康",pos:"发货包装员",hire:"2023-07-04",base:2250,allow1:0,allow2:344,allow3:200,allow4:0,allow5:0,allow6:0,attend:120,other:33.88,ot:827.59,perf:225,seniority:0,hrRate:12.93,total:4000.47,taxBefore:4000},
+      {row:196,code:"23070016",name:"张松健",pos:"成品仓管员",hire:"2023-07-03",base:2350,allow1:0,allow2:390,allow3:500,allow4:0,allow5:0,allow6:0,attend:120,other:40.72,ot:864.37,perf:235,seniority:0,hrRate:13.51,total:4500.09,taxBefore:4500}
+    ];
+
+    // ----- 渲染表格 + 搜索逻辑 -----
+    const tbody = document.getElementById('tableBody');
+    const emptyMessage = document.getElementById('emptyMessage');
+    const resultCount = document.getElementById('resultCount');
+    const searchInput = document.getElementById('searchInput');
+    const searchBtn = document.getElementById('searchBtn');
+    const clearBtn = document.getElementById('clearBtn');
+
+    // 格式化数字保留两位小数，若为0则显示0
+    function fmt(val) {
+      if (val === undefined || val === null) return '0';
+      const num = parseFloat(val);
+      if (isNaN(num)) return '0';
+      return num.toFixed(2);
+    }
+
+    function renderTable(filterText) {
+      const keyword = filterText.trim().toLowerCase();
+      let filtered = rawData;
+      if (keyword !== '') {
+        filtered = rawData.filter(item => item.name.toLowerCase().includes(keyword));
+      }
+
+      // 清空并重新填充
+      tbody.innerHTML = '';
+      if (filtered.length === 0) {
+        emptyMessage.style.display = 'block';
+        resultCount.textContent = '共 0 人';
+        return;
+      }
+      emptyMessage.style.display = 'none';
+      resultCount.textContent = `共 ${filtered.length} 人`;
+
+      filtered.forEach((emp, index) => {
+        const tr = document.createElement('tr');
+        // 高亮显示搜索匹配的行 (可选)
+        if (keyword && emp.name.toLowerCase().includes(keyword)) {
+          tr.classList.add('highlight-row');
+        }
+        tr.innerHTML = `
+          <td>${emp.code}</td>
+          <td class="name-highlight">${emp.name}</td>
+          <td>${emp.pos}</td>
+          <td>${emp.hire}</td>
+          <td>${fmt(emp.base)}</td>
+          <td>${fmt(emp.allow1)}</td>
+          <td>${fmt(emp.allow2)}</td>
+          <td>${fmt(emp.allow3)}</td>
+          <td>${fmt(emp.allow4)}</td>
+          <td>${fmt(emp.allow5)}</td>
+          <td>${fmt(emp.allow6)}</td>
+          <td>${fmt(emp.attend)}</td>
+          <td>${fmt(emp.other)}</td>
+          <td>${fmt(emp.ot)}</td>
+          <td>${fmt(emp.perf)}</td>
+          <td>${fmt(emp.seniority)}</td>
+          <td>${fmt(emp.hrRate)}</td>
+          <td>${fmt(emp.total)}</td>
+          <td>${fmt(emp.taxBefore)}</td>
+        `;
+        tbody.appendChild(tr);
+      });
+    }
+
+    // 初始化全部渲染
+    renderTable('');
+
+    // 搜索事件
+    function doSearch() {
+      renderTable(searchInput.value);
+    }
+    searchBtn.addEventListener('click', doSearch);
+    searchInput.addEventListener('keyup', function(e) {
+      if (e.key === 'Enter') {
+        doSearch();
+      }
+    });
+
+    // 清除搜索
+    clearBtn.addEventListener('click', function() {
+      searchInput.value = '';
+      renderTable('');
+    });
+
+  })();
+</script>
+</body>
+</html>
